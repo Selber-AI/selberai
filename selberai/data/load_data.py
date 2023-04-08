@@ -32,7 +32,7 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
       
   else:
     data_avail = False
-    print('\nDataset is not available!\n')
+    print('\nDataset is not available on {}!\n'.format(path_to_data))
     
   # download data if not available or missing files
   if not data_avail:
