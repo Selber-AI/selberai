@@ -57,9 +57,7 @@ def download(name: str, path_to_data: str, token: str):
 
 """
 def download(config: dict, dataset_name: str):
-  """
-  """
-  
+
   # set saving path
   path_to_folder = config['dataverse'][dataset_name]['saving_path']
   path_to_file = path_to_folder + 'files.zip'
