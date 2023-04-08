@@ -12,7 +12,8 @@ config = {
 def download(name: str, path_to_data: str, token: str):
   """
   """
-  print("Downloading {} data from {}!".format(name, config['base_url']))
+  print("Downloading {} data from {} to {}!".format(name, config['base_url'],
+    path_to_data))
   
   # set saving path
   path_to_folder = 'datasets/{}/processed/'.format(name)
