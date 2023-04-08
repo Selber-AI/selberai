@@ -1,9 +1,11 @@
 import os
 import pandas as pd
+import numpy as np
 
 import selberai.data.download_data as download_data
 
-def load (name: str, sample_only=False, path_to_data=None, token=None):
+def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
+  np.array, np.array, np.array):
   """
   """
   
@@ -12,7 +14,7 @@ def load (name: str, sample_only=False, path_to_data=None, token=None):
     path_to_data = 'datasets/{}/processed/'.format(name)
   
   # list directory of dataset
-  dir_cont = os.listdir(path_to_data)
+  dir_cont = set(os.listdir(path_to_data))
   
   # check if dataset available
   if ('training' in dir_cont and 'testing' in dir_cont and 
@@ -30,11 +32,28 @@ def load (name: str, sample_only=False, path_to_data=None, token=None):
       
   else:
     data_avail = False
-    print('\nDataset is not available!\n')
+    path_to_data = 'datasets/{}/processed/'.format(name)
+    print('\nDataset is not available on {}!\n'.format(path_to_data))
     
   # download data if not available or missing files
   if not data_avail:
     download_data.download(name, path_to_data, token)
     
-  # load data
+  # read the directories
+  path_to_train = path_to_data + 'training/'
+  path_to_val = path_to_data + 'validation/'
+  path_to_test = path_to_data + 'testing/'
+  train_cont = os.listdir(path_to_train)
+  val_cont = os.listdir(path_to_val)
+  test_cont = os.listdir(path_to_test)
+  
+  # load data and conver to numpy
+  train = pd.concat((pd.read_csv(path_to_train+f) for f in train_cont)).to_numpy()
+  val = pd.concat((pd.read_csv(path_to_val+f) for f in val_cont)).to_numpy()
+  test = pd.concat((pd.read_csv(path_to_test+f) for f in test_cont)).to_numpy()
+  
+  # set and return value
+  return_value = (train, val, test)
+  return return_value
+  
   
