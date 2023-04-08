@@ -15,7 +15,7 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   
   # list directory of dataset
   dir_cont = set(os.listdir(path_to_data))
-  
+  print(dir_cont)
   # check if dataset available
   if ('training' in dir_cont and 'testing' in dir_cont and 
     'validation' in dir_cont):
