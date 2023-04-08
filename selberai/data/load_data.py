@@ -15,7 +15,7 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   
   # list directory of dataset
   dir_cont = set(os.listdir(path_to_data))
-  print(dir_cont)
+  
   # check if dataset available
   if ('training' in dir_cont and 'testing' in dir_cont and 
     'validation' in dir_cont):
@@ -45,7 +45,7 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   path_to_test = path_to_data + 'testing/'
   train_cont = os.listdir(path_to_train)
   val_cont = os.listdir(path_to_val)
-  test_cont = os.listdir(path_to_testing)
+  test_cont = os.listdir(path_to_test)
   
   # load data and conver to numpy
   train = pd.concat((pd.read_csv(path_to_train+f) for f in train_cont)).to_numpy()
