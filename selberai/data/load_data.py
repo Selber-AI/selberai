@@ -94,9 +94,9 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   if name == 'BuildingElectricity':
     path = path_to_data + 'additional/building_images_pixel_histograms_rgb.csv'
     add = pd.read_csv(path)
-    train = convert_be(config[name], train)
-    val = conver_be(config[name], val)
-    test = convert_be(config[name], test)
+    train = convert_be(train)
+    val = conver_be(val)
+    test = convert_be(test)
   
   # convert WindFarm to unified representation
   elif name == 'WindFarm':
@@ -108,7 +108,7 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   
 
   
-def convert_be(config_be: dict, dataset: pd.DataFrame) -> np.array:
+def convert_be(dataset: pd.DataFrame) -> np.array:
   """
   """
   dataset = dataset.to_numpy()
