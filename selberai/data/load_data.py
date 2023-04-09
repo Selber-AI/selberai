@@ -5,10 +5,21 @@ import numpy as np
 
 import selberai.data.download_data as download_data
 
+class Dataset:
+  """
+  """
+  
+  def __init__(self, train: np.array, val: np.array, test: np.array, 
+    add: pd.DataFrame):
+    
+    self.train = train
+    self.val = val
+    self.test = test
+    self.add = add
+    
 
-
-def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
-  np.array, np.array, np.array):
+def load(name: str, sample_only=False, path_to_data=None, path_to_token=None
+  ) -> Dataset:
   """
   """
   
@@ -19,12 +30,17 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   # list directory of dataset
   dir_cont = set(os.listdir(path_to_data))
   
+  # set paths and read the directories
+  path_to_train = path_to_data + 'training/'
+  path_to_val = path_to_data + 'validation/'
+  path_to_test = path_to_data + 'testing/'
+  
   # check if dataset available
   if ('training' in dir_cont and 'testing' in dir_cont and 
     'validation' in dir_cont):
-    dir_cont_train = os.listdir(path_to_data+'training/')
-    dir_cont_val = os.listdir(path_to_data+'validation/')
-    dir_cont_test = os.listdir(path_to_data+'testing/')
+    dir_cont_train = os.listdir(path_to_train)
+    dir_cont_val = os.listdir(path_to_val)
+    dir_cont_test = os.listdir(path_to_test)
     
     if (len(dir_cont_train) != 0 and len(dir_cont_val) != 0 and
       len(dir_cont_test) != 0):
@@ -40,16 +56,12 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
     
   # download data if not available or missing files
   if not data_avail:
-    download_data.download(name, path_to_data, token)
+    download_data.download(name, path_to_data, path_to_token)
+    
     
   ###
   # Load training, validation and testing ###
   ###
-  
-  # set paths and read the directories
-  path_to_train = path_to_data + 'training/'
-  path_to_val = path_to_data + 'validation/'
-  path_to_test = path_to_data + 'testing/'
   
   # read directory content
   train_cont = os.listdir(path_to_train)
@@ -67,9 +79,6 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   val = pd.DataFrame()
   test = pd.DataFrame()
   
-  # set additional default to None. Replace for respective datasets
-  add = None
-  
   # iterate over train, val, test data files and concatenate
   print("Loading training data.")
   pbar = tqdm(total=len(train_cont))
@@ -86,30 +95,43 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   for f_name in test_cont:
     test = pd.concat((test, pd.read_csv(path_to_test+f_name)))
     pbar.update(1)
+    
   
- 
   ###
   # Convert to unified data representation and potentially load additional ###
   ###
   
+  # convert BuildingElectricity to unified representation
   if name == 'BuildingElectricity':
-    train = convert_be(config[name], train)
-    val = conver_be(config[name], val)
-    test = convert_be(config[name], test)
-    add = load_add_be()
+    path = path_to_data + 'additional/building_images_pixel_histograms_rgb.csv'
+    add = pd.read_csv(path)
+    train, val, test = convert_be(train), convert_be(val), convert_be(test)
+  
+  # convert WindFarm to unified representation
   elif name == 'WindFarm':
     print('To Do: Needs to be implemented!')
-
   
-  # set and return value
-  return_value = (train, val, test, add)
-  return return_value
-  
-
-def convert_be(config_be: dict, dataset: pd.DataFrame) -> np.array:
-  """
-  """
-  
-  dataset = dataset.to_numpy()
-  
+  # set and return values as Dataset object
+  dataset = Dataset(train, val, test, add)
   return dataset
+  
+
+  
+def convert_be(dataframe: pd.DataFrame) -> dict:
+  """
+  """
+  
+  data_dict = {}
+  data_dict['x_t'] = dataframe.iloc[:, :5].to_numpy()
+  data_dict['x_s'] = dataframe.iloc[:, 5].to_numpy()
+  data_dict['x_st'] = dataframe.iloc[:, 6:(6+24*9)].to_numpy()
+  data_dict['y'] = dataframe.iloc[:, (6+24*9):].to_numpy()
+  
+  # alternative is order='C' with shape (len(data_dict['x_st']), 9, 24)
+  data_dict['x_st'] = np.reshape(data_dict['x_st'], 
+    (len(data_dict['x_st']), 24, 9), order='F')
+  
+  
+  return data_dict
+  
+  
