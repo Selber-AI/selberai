@@ -5,7 +5,18 @@ import numpy as np
 
 import selberai.data.download_data as download_data
 
-
+class Dataset:
+  """
+  """
+  
+  def __init__(self, train: np.array, val: np.array, test: np.array, 
+    add: pd.DataFrame):
+    
+    self.train = train
+    self.val = val
+    self.test = test
+    self.add = add
+    
 
 def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   np.array, np.array, np.array, pd.DataFrame):
@@ -66,7 +77,6 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   train = pd.DataFrame()
   val = pd.DataFrame()
   test = pd.DataFrame()
-  add = pd.DataFrame()
   
   # iterate over train, val, test data files and concatenate
   print("Loading training data.")
@@ -94,24 +104,33 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   if name == 'BuildingElectricity':
     path = path_to_data + 'additional/building_images_pixel_histograms_rgb.csv'
     add = pd.read_csv(path)
-    train = convert_be(train)
-    val = conver_be(val)
-    test = convert_be(test)
+    train, val, test = convert_be(train), conver_be(val), convert_be(test)
   
   # convert WindFarm to unified representation
   elif name == 'WindFarm':
     print('To Do: Needs to be implemented!')
   
   # set and return value
-  return_value = (train, val, test, add)
-  return return_value
+  dataset = Dataset(train, val, test, add)
+  return dataset
   
 
   
-def convert_be(dataset: pd.DataFrame) -> np.array:
+def convert_be(dataframe: pd.DataFrame) -> dict:
   """
   """
-  dataset = dataset.to_numpy()
-  return dataset
+  
+  data_dict = {}
+  data_dict['x_t'] = dataframe.iloc[:, :5].to_numpy()
+  data_dict['x_s'] = dataframe.iloc[:, 5].to_numpy()
+  data_dict['x_st'] = dataframe.iloc[:, 6:(6+24*9)].to_numpy()
+  data_dict['y'] = dataframe.iloc[:, (6+24*9):].to_numpy()
+  
+  # alternative is order='C' with shape (len(data_dict['x_st']), 9, 24)
+  data_dict['x_st'] = np.reshape(data_dict['x_st'], 
+    (len(data_dict['x_st']), 24, 9), order='F')
+  
+  
+  return data_dict
   
   
