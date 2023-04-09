@@ -58,6 +58,7 @@ def load(name: str, sample_only=False, path_to_data=None, path_to_token=None
   if not data_avail:
     download_data.download(name, path_to_data, path_to_token)
     
+    
   ###
   # Load training, validation and testing ###
   ###
