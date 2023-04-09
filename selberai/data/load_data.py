@@ -18,8 +18,8 @@ class Dataset:
     self.add = add
     
 
-def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
-  np.array, np.array, np.array, pd.DataFrame):
+def load(name: str, sample_only=False, path_to_data=None, path_to_token=None
+  ) -> Dataset:
   """
   """
   
@@ -56,7 +56,7 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
     
   # download data if not available or missing files
   if not data_avail:
-    download_data.download(name, path_to_data, token)
+    download_data.download(name, path_to_data, path_to_token)
     
   ###
   # Load training, validation and testing ###
@@ -110,7 +110,7 @@ def load(name: str, sample_only=False, path_to_data=None, token=None) -> (
   elif name == 'WindFarm':
     print('To Do: Needs to be implemented!')
   
-  # set and return value
+  # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
   return dataset
   

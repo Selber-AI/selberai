@@ -9,7 +9,7 @@ config = {
 }
 
 
-def download(name: str, path_to_data: str, token: str):
+def download(name: str, path_to_data: str, path_to_token: str):
   """
   """
   print("Downloading {} data from {} to {}!".format(name, config['base_url'],
@@ -27,15 +27,20 @@ def download(name: str, path_to_data: str, token: str):
   # set basic data and construct url
   dataverse_server = config['base_url']
   persistentId = config[name]
-  if token is None:
+  if path_to_token is None:
     url_persistent_id = (
       "{}/api/access/dataset/:persistentId/?persistentId={}".format(
         dataverse_server, persistentId))
+  
   else:
+    # import api_key
+    with open(path_to_token, 'r') as token_file:
+      api_key = token_file.read().replace('\n', '')
     url_persistent_id = (
       "{}/api/access/dataset/:persistentId/?persistentId={}&key={}".format(
         dataverse_server, persistentId, api_key))
       
+  
   ###
   # To do: implement sample only download ###
   ###
