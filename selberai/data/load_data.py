@@ -113,7 +113,7 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   
   # convert BuildingElectricity to unified representation
   if name == 'BuildingElectricity':
-    path = path_to_data+'additional/building_images_pixel_histograms_rgb.csv'
+    path = path_to_data+'additional/id_histo_map.csv'
     add = {'id_histo_map': pd.read_csv(path)}
     if not tabular:
       train, val, test = convert_be(train), convert_be(val), convert_be(test)
