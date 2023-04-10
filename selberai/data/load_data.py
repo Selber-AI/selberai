@@ -18,8 +18,8 @@ class Dataset:
     self.add = add
     
 
-def load(name: str, sample_only=False, path_to_data=None, path_to_token=None
-  ) -> Dataset:
+def load(name: str, sample_only=False, tabular=False, path_to_data=None, 
+  path_to_token=None) -> Dataset:
   """
   """
   
@@ -101,15 +101,17 @@ def load(name: str, sample_only=False, path_to_data=None, path_to_token=None
   # Convert to unified data representation and potentially load additional ###
   ###
   
-  # convert BuildingElectricity to unified representation
-  if name == 'BuildingElectricity':
-    path = path_to_data + 'additional/building_images_pixel_histograms_rgb.csv'
-    add = {'id_histo_map': pd.read_csv(path)}
-    train, val, test = convert_be(train), convert_be(val), convert_be(test)
-  
-  # convert WindFarm to unified representation
-  elif name == 'WindFarm':
-    train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
+  if not tabular:
+    # convert BuildingElectricity to unified representation
+    if name == 'BuildingElectricity':
+      path = path_to_data + 'additional/building_images_pixel_histograms_rgb.csv'
+      add = {'id_histo_map': pd.read_csv(path)}
+      train, val, test = convert_be(train), convert_be(val), convert_be(test)
+    
+    # convert WindFarm to unified representation
+    elif name == 'WindFarm':
+      train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
+
 
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
@@ -130,7 +132,6 @@ def convert_wf(dataframe: pd.DataFrame) -> dict:
   data_dict['x_st'] = np.reshape(data_dict['x_st'], 
     (len(data_dict['x_st']), 288, 10), order='F')
   
-  
   return data_dict
   
 def convert_be(dataframe: pd.DataFrame) -> dict:
@@ -146,7 +147,6 @@ def convert_be(dataframe: pd.DataFrame) -> dict:
   # alternative is order='C' with shape (len(data_dict['x_st']), 9, 24)
   data_dict['x_st'] = np.reshape(data_dict['x_st'], 
     (len(data_dict['x_st']), 24, 9), order='F')
-  
   
   return data_dict
   
