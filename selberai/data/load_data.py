@@ -122,8 +122,8 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   elif name == 'WindFarm':
     if not tabular:
       train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
-
-
+      
+      
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
   return dataset
@@ -139,9 +139,10 @@ def convert_wf(dataframe: pd.DataFrame) -> dict:
   data_dict['x_st'] = dataframe.iloc[:, 5:(5+288*10)].to_numpy()
   data_dict['y'] = dataframe.iloc[:, (5+288*10):].to_numpy()
   
-  # alternative is order='C' with shape (len(data_dict['x_st']), 9, 24)
+  # either order='C' with shape (len(data_dict['x_st']), 10, 288)
+  # or order='F' with shape (len(data_dict['x_st']), 288, 10)
   data_dict['x_st'] = np.reshape(data_dict['x_st'], 
-    (len(data_dict['x_st']), 288, 10), order='F')
+    (len(data_dict['x_st']), 10, 288), order='C')
   
   return data_dict
   
@@ -156,9 +157,10 @@ def convert_be(dataframe: pd.DataFrame) -> dict:
   data_dict['x_st'] = dataframe.iloc[:, 6:(6+24*9)].to_numpy()
   data_dict['y'] = dataframe.iloc[:, (6+24*9):].to_numpy()
   
-  # alternative is order='C' with shape (len(data_dict['x_st']), 9, 24)
+  # either order='C' with shape (len(data_dict['x_st']), 9, 24)
+  # or order='F' with shape (len(data_dict['x_st']), 24, 9)
   data_dict['x_st'] = np.reshape(data_dict['x_st'], 
-    (len(data_dict['x_st']), 24, 9), order='F')
+    (len(data_dict['x_st']), 9, 24), order='C')
   
   return data_dict
   
