@@ -18,14 +18,19 @@ class Dataset:
     self.add = add
     
 
-def load(name: str, sample_only=False, tabular=False, path_to_data=None, 
-  path_to_token=None) -> Dataset:
+def load(name: str, subtask: str, sample_only=False, tabular=False, 
+  path_to_data=None, path_to_token=None) -> Dataset:
   """
   """
   
   # set standard path to data if not provided
   if path_to_data is None:
     path_to_data = 'datasets/{}/processed/'.format(name)
+  else:
+    path_to_data += name + '/'
+  
+  # extend path 
+  path_to_data += subtask + '/'
   
   # list directory of dataset
   dir_cont = set(os.listdir(path_to_data))
@@ -38,25 +43,30 @@ def load(name: str, sample_only=False, tabular=False, path_to_data=None,
   # check if dataset available
   if ('training' in dir_cont and 'testing' in dir_cont and 
     'validation' in dir_cont):
+    
+    # read content of available train, val and test directories
     dir_cont_train = os.listdir(path_to_train)
     dir_cont_val = os.listdir(path_to_val)
     dir_cont_test = os.listdir(path_to_test)
     
+    # check if content is non-zero
     if (len(dir_cont_train) != 0 and len(dir_cont_val) != 0 and
       len(dir_cont_test) != 0):
       data_avail = True
+    
     else:
       data_avail = False
-      print('\nDataset directory exists, but some data is missing!\n')
+      print('\nDataset available, but some datasets are missing files!\n')
       
   else:
     data_avail = False
-    path_to_data = 'datasets/{}/processed/'.format(name)
     print('\nDataset is not available on {}!\n'.format(path_to_data))
     
   # download data if not available or missing files
   if not data_avail:
-    download_data.download(name, path_to_data, path_to_token)
+    # TO DO: implement download of subtask data only
+    path_to_data = path_to_data[:-(len(subtask)+1)]
+    download_data.download(name, subtask, path_to_data, path_to_token)
     
     
   ###
@@ -101,10 +111,12 @@ def load(name: str, sample_only=False, tabular=False, path_to_data=None,
   # Convert to unified data representation and potentially load additional ###
   ###
   
+  # only do if we don't choose to load tabular data
   if not tabular:
+  
     # convert BuildingElectricity to unified representation
     if name == 'BuildingElectricity':
-      path = path_to_data + 'additional/building_images_pixel_histograms_rgb.csv'
+      path = path_to_data+'additional/building_images_pixel_histograms_rgb.csv'
       add = {'id_histo_map': pd.read_csv(path)}
       train, val, test = convert_be(train), convert_be(val), convert_be(test)
     
@@ -133,6 +145,7 @@ def convert_wf(dataframe: pd.DataFrame) -> dict:
     (len(data_dict['x_st']), 288, 10), order='F')
   
   return data_dict
+  
   
 def convert_be(dataframe: pd.DataFrame) -> dict:
   """

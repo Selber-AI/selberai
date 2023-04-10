@@ -9,7 +9,7 @@ config = {
 }
 
 
-def download(name: str, path_to_data: str, path_to_token: str):
+def download(name: str, subtask: str, path_to_data: str, path_to_token: str):
   """
   """
   print("Downloading {} data from {} to {}!".format(name, config['base_url'],
@@ -43,6 +43,10 @@ def download(name: str, path_to_data: str, path_to_token: str):
   
   ###
   # To do: implement sample only download ###
+  ###
+  
+  ###
+  # To do: implement subtask only download ###
   ###
   
   
