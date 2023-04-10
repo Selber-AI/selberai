@@ -111,18 +111,17 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   # Convert to unified data representation and potentially load additional ###
   ###
   
-  # only do if we don't choose to load tabular data
-  if not tabular:
-  
     # convert BuildingElectricity to unified representation
     if name == 'BuildingElectricity':
       path = path_to_data+'additional/building_images_pixel_histograms_rgb.csv'
       add = {'id_histo_map': pd.read_csv(path)}
-      train, val, test = convert_be(train), convert_be(val), convert_be(test)
+      if not tabular:
+        train, val, test = convert_be(train), convert_be(val), convert_be(test)
     
     # convert WindFarm to unified representation
     elif name == 'WindFarm':
-      train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
+      if not tabular:
+        train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
 
 
   # set and return values as Dataset object
