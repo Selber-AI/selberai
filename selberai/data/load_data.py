@@ -104,18 +104,34 @@ def load(name: str, sample_only=False, path_to_data=None, path_to_token=None
   # convert BuildingElectricity to unified representation
   if name == 'BuildingElectricity':
     path = path_to_data + 'additional/building_images_pixel_histograms_rgb.csv'
-    add = pd.read_csv(path)
+    add = {'id_histo_map': pd.read_csv(path)}
     train, val, test = convert_be(train), convert_be(val), convert_be(test)
   
   # convert WindFarm to unified representation
   elif name == 'WindFarm':
-    print('To Do: Needs to be implemented!')
-  
+    train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
+
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
   return dataset
   
-
+  
+def convert_wf(dataframe: pd.DataFrame) -> dict:
+  """
+  """
+  
+  data_dict = {}
+  data_dict['x_s'] = dataframe.iloc[:, :2].to_numpy()
+  data_dict['x_t'] = dataframe.iloc[:, 2:5].to_numpy()
+  data_dict['x_st'] = dataframe.iloc[:, 5:(5+288*10)].to_numpy()
+  data_dict['y'] = dataframe.iloc[:, (5+288*10):].to_numpy()
+  
+  # alternative is order='C' with shape (len(data_dict['x_st']), 9, 24)
+  data_dict['x_st'] = np.reshape(data_dict['x_st'], 
+    (len(data_dict['x_st']), 288, 10), order='F')
+  
+  
+  return data_dict
   
 def convert_be(dataframe: pd.DataFrame) -> dict:
   """
