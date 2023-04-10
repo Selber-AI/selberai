@@ -18,14 +18,19 @@ class Dataset:
     self.add = add
     
 
-def load(name: str, sample_only=False, path_to_data=None, path_to_token=None
-  ) -> Dataset:
+def load(name: str, subtask: str, sample_only=False, tabular=False, 
+  path_to_data=None, path_to_token=None) -> Dataset:
   """
   """
   
   # set standard path to data if not provided
   if path_to_data is None:
     path_to_data = 'datasets/{}/processed/'.format(name)
+  else:
+    path_to_data += name + '/'
+  
+  # extend path 
+  path_to_data += subtask + '/'
   
   # list directory of dataset
   dir_cont = set(os.listdir(path_to_data))
@@ -38,25 +43,30 @@ def load(name: str, sample_only=False, path_to_data=None, path_to_token=None
   # check if dataset available
   if ('training' in dir_cont and 'testing' in dir_cont and 
     'validation' in dir_cont):
+    
+    # read content of available train, val and test directories
     dir_cont_train = os.listdir(path_to_train)
     dir_cont_val = os.listdir(path_to_val)
     dir_cont_test = os.listdir(path_to_test)
     
+    # check if content is non-zero
     if (len(dir_cont_train) != 0 and len(dir_cont_val) != 0 and
       len(dir_cont_test) != 0):
       data_avail = True
+    
     else:
       data_avail = False
-      print('\nDataset directory exists, but some data is missing!\n')
+      print('\nDataset available, but some datasets are missing files!\n')
       
   else:
     data_avail = False
-    path_to_data = 'datasets/{}/processed/'.format(name)
     print('\nDataset is not available on {}!\n'.format(path_to_data))
     
   # download data if not available or missing files
   if not data_avail:
-    download_data.download(name, path_to_data, path_to_token)
+    # TO DO: implement download of subtask data only
+    path_to_data = path_to_data[:-(len(subtask)+1)]
+    download_data.download(name, subtask, path_to_data, path_to_token)
     
     
   ###
@@ -103,19 +113,39 @@ def load(name: str, sample_only=False, path_to_data=None, path_to_token=None
   
   # convert BuildingElectricity to unified representation
   if name == 'BuildingElectricity':
-    path = path_to_data + 'additional/building_images_pixel_histograms_rgb.csv'
-    add = pd.read_csv(path)
-    train, val, test = convert_be(train), convert_be(val), convert_be(test)
+    path = path_to_data+'additional/building_images_pixel_histograms_rgb.csv'
+    add = {'id_histo_map': pd.read_csv(path)}
+    if not tabular:
+      train, val, test = convert_be(train), convert_be(val), convert_be(test)
   
   # convert WindFarm to unified representation
   elif name == 'WindFarm':
-    print('To Do: Needs to be implemented!')
-  
+    if not tabular:
+      train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
+      
+      
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
   return dataset
   
-
+  
+def convert_wf(dataframe: pd.DataFrame) -> dict:
+  """
+  """
+  
+  data_dict = {}
+  data_dict['x_s'] = dataframe.iloc[:, :2].to_numpy()
+  data_dict['x_t'] = dataframe.iloc[:, 2:5].to_numpy()
+  data_dict['x_st'] = dataframe.iloc[:, 5:(5+288*10)].to_numpy()
+  data_dict['y'] = dataframe.iloc[:, (5+288*10):].to_numpy()
+  
+  # either order='C' with shape (len(data_dict['x_st']), 10, 288)
+  # or order='F' with shape (len(data_dict['x_st']), 288, 10)
+  data_dict['x_st'] = np.reshape(data_dict['x_st'], 
+    (len(data_dict['x_st']), 10, 288), order='C')
+  
+  return data_dict
+  
   
 def convert_be(dataframe: pd.DataFrame) -> dict:
   """
@@ -127,10 +157,10 @@ def convert_be(dataframe: pd.DataFrame) -> dict:
   data_dict['x_st'] = dataframe.iloc[:, 6:(6+24*9)].to_numpy()
   data_dict['y'] = dataframe.iloc[:, (6+24*9):].to_numpy()
   
-  # alternative is order='C' with shape (len(data_dict['x_st']), 9, 24)
+  # either order='C' with shape (len(data_dict['x_st']), 9, 24)
+  # or order='F' with shape (len(data_dict['x_st']), 24, 9)
   data_dict['x_st'] = np.reshape(data_dict['x_st'], 
-    (len(data_dict['x_st']), 24, 9), order='F')
-  
+    (len(data_dict['x_st']), 9, 24), order='C')
   
   return data_dict
   
