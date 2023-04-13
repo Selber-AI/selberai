@@ -5,7 +5,7 @@ import shutil
 
 config = {
   'base_url': 'https://dataverse.harvard.edu',
-  'BuildingElectricity': 'doi:10.7910/DVN/MS0KPW'
+  'BuildingElectricity': 'doi:10.7910/DVN/O2MDHX'
 }
 
 
