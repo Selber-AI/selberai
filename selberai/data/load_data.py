@@ -123,9 +123,9 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
     if not tabular:
       train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
       
-      
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
+  
   return dataset
   
   
