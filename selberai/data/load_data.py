@@ -132,17 +132,35 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
 def convert_wf(dataframe: pd.DataFrame) -> dict:
   """
   """
+  # set values from config file
+  hist_window = 288
+  pred_window = 288
+  n_times = 3
+  n_states = 10
+  n_data = len(dataframe.index)
   
+  # set starting and end indices of tabular features
+  end_s = 2
+  end_t1 = end_s + hist_window * n_times
+  end_st = end_t1 + hist_window * n_states
+  end_t2 = end_st + pred_window * n_times
+  
+  # fill dataset dictionary
   data_dict = {}
-  data_dict['x_s'] = dataframe.iloc[:, :2].to_numpy()
-  data_dict['x_t'] = dataframe.iloc[:, 2:5].to_numpy()
-  data_dict['x_st'] = dataframe.iloc[:, 5:(5+288*10)].to_numpy()
-  data_dict['y'] = dataframe.iloc[:, (5+288*10):].to_numpy()
+  data_dict['x_s'] = dataframe.iloc[:, :end_s].to_numpy()
+  data_dict['x_t_1'] = dataframe.iloc[:, end_s:end_t1].to_numpy().astype(int)
+  data_dict['x_st'] = dataframe.iloc[:, end_t1:end_st].to_numpy()
+  data_dict['x_t_2'] = dataframe.iloc[:, end_st:end_t2].to_numpy().astype(int)
+  data_dict['y'] = dataframe.iloc[:, end_t2:].to_numpy()
   
-  # either order='C' with shape (len(data_dict['x_st']), 10, 288)
-  # or order='F' with shape (len(data_dict['x_st']), 288, 10)
+  # either order='C' with shape (n_data, n_states, hist_window)
+  # or order='F' with shape (n_data, hist_window, n_states)
+  data_dict['x_t_1'] = np.reshape(data_dict['x_t_1'], 
+    (n_data, n_times, hist_window), order='C')
+  data_dict['x_t_2'] = np.reshape(data_dict['x_t_2'], 
+    (n_data, n_times, pred_window), order='C')
   data_dict['x_st'] = np.reshape(data_dict['x_st'], 
-    (len(data_dict['x_st']), 10, 288), order='C')
+    (n_data, n_states, hist_window), order='C')
   
   return data_dict
   
@@ -150,17 +168,27 @@ def convert_wf(dataframe: pd.DataFrame) -> dict:
 def convert_be(dataframe: pd.DataFrame) -> dict:
   """
   """
+  # set values from config file
+  hist_window = 24
+  n_states = 9
+  n_data = len(dataframe.index)
   
+  # set starting and end indices of tabular features
+  end_t = 5
+  start_st = end_t + 1
+  end_st = start_st + hist_window * n_states
+  
+  # fill dataset dictionary
   data_dict = {}
-  data_dict['x_t'] = dataframe.iloc[:, :5].to_numpy()
-  data_dict['x_s'] = dataframe.iloc[:, 5].to_numpy()
-  data_dict['x_st'] = dataframe.iloc[:, 6:(6+24*9)].to_numpy()
-  data_dict['y'] = dataframe.iloc[:, (6+24*9):].to_numpy()
+  data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy().astype(int)
+  data_dict['x_s'] = dataframe.iloc[:, end_t].to_numpy().astype(int)
+  data_dict['x_st'] = dataframe.iloc[:, start_st:end_st].to_numpy()
+  data_dict['y'] = dataframe.iloc[:, end_st:].to_numpy()
   
-  # either order='C' with shape (len(data_dict['x_st']), 9, 24)
-  # or order='F' with shape (len(data_dict['x_st']), 24, 9)
+  # either order='C' with shape (n_data, n_states, hist_window)
+  # or order='F' with shape (n_data, hist_window, n_states)
   data_dict['x_st'] = np.reshape(data_dict['x_st'], 
-    (len(data_dict['x_st']), 9, 24), order='C')
+    (n_data, n_states, hist_window), order='C')
   
   return data_dict
   
