@@ -120,6 +120,7 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   
   # convert WindFarm to unified representation
   elif name == 'WindFarm':
+    add = None
     if not tabular:
       train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
       
