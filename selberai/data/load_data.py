@@ -143,8 +143,16 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
 def convert_ca(dataframe: pd.DataFrame) -> dict:
   """
   """
+  # set starting and end indices of tabular features
+  end_t = 2
+  end_s = 5
+  end_y = -298
   
-  
+  data_dict = {}
+  data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy()
+  data_dict['x_s'] = dataframe.iloc[:, end_t:end_s].to_numpy()
+  data_dict['x_st'] = dataframe.iloc[:, end_s:end_y].to_numpy()
+  data_dict['y'] = dataframe.iloc[:, end_y:].to_numpy()  
   return dataframe
   
 def convert_wf(dataframe: pd.DataFrame) -> dict:
