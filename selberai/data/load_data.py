@@ -57,18 +57,18 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
     else:
       data_avail = False
       print('\nDataset available, but some datasets are missing files!\n')
-      
+    
   else:
     data_avail = False
     print('\nDataset is not available on {}!\n'.format(path_to_data))
-    
+  
   # download data if not available or missing files
   if not data_avail:
     # TO DO: implement download of subtask data only
     path_to_data = path_to_data[:-(len(subtask)+1)]
     download_data.download(name, subtask, path_to_data, path_to_token)
-    
-    
+  
+  
   ###
   # Load training, validation and testing ###
   ###
@@ -89,23 +89,27 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   val = pd.DataFrame()
   test = pd.DataFrame()
   
-  # iterate over train, val, test data files and concatenate
+  # iterate over train and concatenate
   print("Loading training data.")
   pbar = tqdm(total=len(train_cont))
   for f_name in train_cont:
     train = pd.concat((train, pd.read_csv(path_to_train+f_name)))
     pbar.update(1)
+    
+  # iterate over val and concatenate
   print("Loading validation data.")
   pbar = tqdm(total=len(val_cont))
   for f_name in val_cont:
     val = pd.concat((val, pd.read_csv(path_to_val+f_name)))
     pbar.update(1)
+    
+  # iterate over test and concatenate
   print("Loading testing data.")
   pbar = tqdm(total=len(test_cont))
   for f_name in test_cont:
     test = pd.concat((test, pd.read_csv(path_to_test+f_name)))
     pbar.update(1)
-    
+  
   
   ###
   # Convert to unified data representation and potentially load additional ###
@@ -124,11 +128,24 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
     if not tabular:
       train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
       
+  # convert ClimART to unified representation
+  elif name == 'ClimART':
+    add = None
+    if not tbaular:
+      train, val, test = convert_ca(train), convert_ca(val), convert_ca(test)
+      
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
   
   return dataset
   
+  
+def convert_ca(dataframe: pd.DataFrame) -> dict:
+  """
+  """
+  
+  
+  return dataframe
   
 def convert_wf(dataframe: pd.DataFrame) -> dict:
   """
