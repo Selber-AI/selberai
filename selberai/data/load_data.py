@@ -147,22 +147,22 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
   """
   """
   # set values from config file
+  n_data = len(dataframe.index)
   n_layers = 49
   n_levels = 50
-  
-  vars_level = 4
+  vars_global = 79 # 82 globals. 3 coordinates x,y,z extracted. are in x_s
+  vars_levels = 4
   if subtask == 'pristine':
     vars_layers = 14
   elif subtask == 'clear_sky':
     vars_layers = 45
-  vars_global = 79 # 82 globals. 3 coordinates x,y,z extracted as they are in x_s
   
   # set starting and end indices of tabular features
   end_t = 2
   end_s = end_t + 3
   end_st_1 = end_s + vars_global
   end_st_2 = end_st_1 + vars_layers * n_layers
-  end_st_3 = end_st_2 + vars_level * n_levels
+  end_st_3 = end_st_2 + vars_levels * n_levels
   
   data_dict = {}
   data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy()
@@ -172,7 +172,11 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
   data_dict['x_st_3'] = dataframe.iloc[:, end_st_2:end_st_3].to_numpy()
   data_dict['y'] = dataframe.iloc[:, end_st_3:].to_numpy()
   
-  
+  data_dict['x_st_2'] = np.reshape(data_dict['x_st_2'], 
+    (n_data, vars_layers, n_levels), order='C')
+  data_dict['x_st_3'] = np.reshape(data_dict['x_st_3'], 
+    (n_data, vars_levels, n_levels), order='C')
+    
   
   return data_dict
   
