@@ -152,8 +152,9 @@ def convert_ca(dataframe: pd.DataFrame) -> dict:
   data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy()
   data_dict['x_s'] = dataframe.iloc[:, end_t:end_s].to_numpy()
   data_dict['x_st'] = dataframe.iloc[:, end_s:end_y].to_numpy()
-  data_dict['y'] = dataframe.iloc[:, end_y:].to_numpy()  
-  return dataframe
+  data_dict['y'] = dataframe.iloc[:, end_y:].to_numpy()
+  
+  return data_dict
   
 def convert_wf(dataframe: pd.DataFrame) -> dict:
   """
