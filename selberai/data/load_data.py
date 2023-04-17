@@ -132,7 +132,10 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   elif name == 'ClimART':
     add = None
     if not tabular:
-      train, val, test = convert_ca(train), convert_ca(val), convert_ca(test)
+      train = convert_ca(train, subtask)
+      val = convert_ca(val, subtask)
+      test = convert_ca(test, subtask)
+      
       
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
@@ -140,19 +143,41 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   return dataset
   
   
-def convert_ca(dataframe: pd.DataFrame) -> dict:
+def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
   """
   """
+  # set values from config file
+  n_data = len(dataframe.index)
+  n_layers = 49
+  n_levels = 50
+  vars_global = 79 # 82 globals. 3 coordinates x,y,z extracted. are in x_s
+  vars_levels = 4
+  if subtask == 'pristine':
+    vars_layers = 14
+  elif subtask == 'clear_sky':
+    vars_layers = 45
+  
   # set starting and end indices of tabular features
   end_t = 2
-  end_s = 5
-  end_y = -298
+  end_s = end_t + 3
+  end_st_1 = end_s + vars_global
+  end_st_2 = end_st_1 + vars_layers * n_layers
+  end_st_3 = end_st_2 + vars_levels * n_levels
   
   data_dict = {}
   data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy()
   data_dict['x_s'] = dataframe.iloc[:, end_t:end_s].to_numpy()
-  data_dict['x_st'] = dataframe.iloc[:, end_s:end_y].to_numpy()
-  data_dict['y'] = dataframe.iloc[:, end_y:].to_numpy()
+  data_dict['x_st_1'] = dataframe.iloc[:, end_s:end_st_1].to_numpy()
+  data_dict['x_st_2'] = dataframe.iloc[:, end_st_1:end_st_2].to_numpy()
+  data_dict['x_st_3'] = dataframe.iloc[:, end_st_2:end_st_3].to_numpy()
+  data_dict['y'] = dataframe.iloc[:, end_st_3:].to_numpy()
+  
+  # reshape arrays
+  data_dict['x_st_2'] = np.reshape(data_dict['x_st_2'], 
+    (n_data, vars_layers, n_layers), order='C')
+  data_dict['x_st_3'] = np.reshape(data_dict['x_st_3'], 
+    (n_data, vars_levels, n_levels), order='C')
+
   
   return data_dict
   
