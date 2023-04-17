@@ -131,7 +131,7 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   # convert ClimART to unified representation
   elif name == 'ClimART':
     add = None
-    if not tbaular:
+    if not tabular:
       train, val, test = convert_ca(train), convert_ca(val), convert_ca(test)
       
   # set and return values as Dataset object
