@@ -172,12 +172,12 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
   data_dict['x_st_3'] = dataframe.iloc[:, end_st_2:end_st_3].to_numpy()
   data_dict['y'] = dataframe.iloc[:, end_st_3:].to_numpy()
   
-  """
+  # reshape arrays
   data_dict['x_st_2'] = np.reshape(data_dict['x_st_2'], 
-    (n_data, vars_layers, n_levels), order='C')
+    (n_data, vars_layers, n_layers), order='C')
   data_dict['x_st_3'] = np.reshape(data_dict['x_st_3'], 
     (n_data, vars_levels, n_levels), order='C')
-  """ 
+
   
   return data_dict
   
