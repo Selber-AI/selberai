@@ -136,7 +136,6 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
       val = convert_ca(val, subtask)
       test = convert_ca(test, subtask)
       
-      
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
   
@@ -163,7 +162,7 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
   end_st_1 = end_s + vars_global
   end_st_2 = end_st_1 + vars_layers * n_layers
   end_st_3 = end_st_2 + vars_levels * n_levels
-  end_y1 = end_st_3 + 4 * n_levels
+  end_y1 = end_st_3 + 2 * n_layers
   
   data_dict = {}
   data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy()
@@ -176,13 +175,13 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
   
   # reshape arrays
   data_dict['x_st_2'] = np.reshape(data_dict['x_st_2'], 
-    (n_data, vars_layers, n_layers), order='C')
+    (n_data, n_layers, vars_layers), order='C')
   data_dict['x_st_3'] = np.reshape(data_dict['x_st_3'], 
-    (n_data, vars_levels, n_levels), order='C')
+    (n_data, n_levels, vars_levels), order='C')
   data_dict['y_st_1'] = np.reshape(data_dict['y_st_1'], 
-    (n_data, 4, n_levels), order='C')
+    (n_data, n_layers, 2), order='C')
   data_dict['y_st_2'] = np.reshape(data_dict['y_st_2'], 
-    (n_data, 2, n_layers), order='C')
+    (n_data, n_levels, 4), order='C')
   
   return data_dict
   
@@ -209,7 +208,7 @@ def convert_wf(dataframe: pd.DataFrame) -> dict:
   data_dict['x_t_1'] = dataframe.iloc[:, end_s:end_t1].to_numpy().astype(int)
   data_dict['x_st'] = dataframe.iloc[:, end_t1:end_st].to_numpy()
   data_dict['x_t_2'] = dataframe.iloc[:, end_st:end_t2].to_numpy().astype(int)
-  data_dict['y'] = dataframe.iloc[:, end_t2:].to_numpy()
+  data_dict['y_st'] = dataframe.iloc[:, end_t2:].to_numpy()
   
   # either order='C' with shape (n_data, n_states, hist_window)
   # or order='F' with shape (n_data, hist_window, n_states)
@@ -241,7 +240,7 @@ def convert_be(dataframe: pd.DataFrame) -> dict:
   data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy().astype(int)
   data_dict['x_s'] = dataframe.iloc[:, end_t].to_numpy().astype(int)
   data_dict['x_st'] = dataframe.iloc[:, start_st:end_st].to_numpy()
-  data_dict['y'] = dataframe.iloc[:, end_st:].to_numpy()
+  data_dict['y_st'] = dataframe.iloc[:, end_st:].to_numpy()
   
   # either order='C' with shape (n_data, n_states, hist_window)
   # or order='F' with shape (n_data, hist_window, n_states)
