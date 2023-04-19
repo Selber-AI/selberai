@@ -128,7 +128,7 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
       add['x_s'] = add['x_s'].to_numpy()
       
       # transpose array
-      add['x_s'] = np.transpose(add['x_s'].to_numpy())
+      add['x_s'] = np.transpose(add['x_s'])
       
       # reshape array
       add['x_s'] = np.reshape(add['x_s'], (len(add['x_s']), 100, 3), order='C')
