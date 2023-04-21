@@ -9,8 +9,11 @@ class Dataset:
   """
   """
   
-  def __init__(self, train: np.array, val: np.array, test: np.array, 
-    add: pd.DataFrame):
+  def __init__(self, 
+               train: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray], 
+               val: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray],
+               test: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray], 
+               add: dict[str, np.ndarray] | np.ndarray):
     
     self.train = train
     self.val = val
@@ -18,9 +21,25 @@ class Dataset:
     self.add = add
     
 
-def load(name: str, subtask: str, sample_only=False, tabular=False, 
-  path_to_data=None, path_to_token=None) -> Dataset:
+def load(name: str, subtask: str, sample_only: bool=False, tabular: bool=False, 
+  path_to_data: str=None, path_to_token: str=None) -> Dataset:
   """
+  Loads the data into memory and returns it.
+  
+  Parameters:
+   - name (str): full name of the dataset to load.
+   - subtask (str): subtask of the dataset to load.
+   - sample_only (bool): if True, loads only 1 csv file for each split. Default: False.
+   - tabular (bool): determines the output format.
+   - path_to_data (str):  path to the data folder containing all datasets.
+   - path_to_token (str): path to the token for https://dataverse.harvard.edu
+
+  Returns a Dataset object with the attributes 'train', 'val', 'test' and 'add'.
+  
+  If the 'tabular' parameter is False, each attribute contains a dictionary with x_t, x_s, x_st, y data depending on the dataset.
+
+  If the tabular' parameter is True, each split contains a tuple with the full features and labels in np.ndarray format,
+  while 'add' contains a np.ndarray.
   """
   
   # set standard path to data if not provided
@@ -122,8 +141,14 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
     
     # read additional data
     add = {'x_s': pd.read_csv(path)}
+
+    # convert train, val test
+    train, val, test = convert_be(train, tabular), convert_be(val, tabular), convert_be(test, tabular)
     
-    if not tabular:
+    if tabular:
+      # TODO: inject additional data?
+      add = add['x_s'].to_numpy().transpose()
+    else:
       # transform additional data from tabular to numpy array 
       add['x_s'] = add['x_s'].to_numpy()
       
@@ -133,27 +158,22 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
       # reshape array
       add['x_s'] = np.reshape(add['x_s'], (len(add['x_s']), 100, 3), order='C')
       
-      # convert train, val test
-      train, val, test = convert_be(train), convert_be(val), convert_be(test)
-      
       
   # convert WindFarm to unified representation
   elif name == 'WindFarm':
     add = None
     
-    if not tabular:
-      # convert train, val test
-      train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
+    # convert train, val test
+    train, val, test = convert_wf(train, tabular), convert_wf(val, tabular), convert_wf(test, tabular)
       
   # convert ClimART to unified representation
   elif name == 'ClimART':
     add = None
     
-    if not tabular:
-      # convert train, val test
-      train = convert_ca(train, subtask)
-      val = convert_ca(val, subtask)
-      test = convert_ca(test, subtask)
+    # convert train, val test
+    train = convert_ca(train, subtask, tabular)
+    val = convert_ca(val, subtask, tabular)
+    test = convert_ca(test, subtask, tabular)
       
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
@@ -161,7 +181,7 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   return dataset
   
   
-def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
+def convert_ca(dataframe: pd.DataFrame, subtask: str, tabular: bool) -> dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray]:
   """
   """
   # set values from config file
@@ -185,29 +205,35 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
   end_st_3 = end_st_2 + vars_levels * n_levels
   end_y1 = end_st_3 + 2 * n_layers
   
-  data_dict = {}
-  data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy()
-  data_dict['x_s'] = dataframe.iloc[:, end_t:end_s].to_numpy()
-  data_dict['x_st_1'] = dataframe.iloc[:, end_s:end_st_1].to_numpy()
-  data_dict['x_st_2'] = dataframe.iloc[:, end_st_1:end_st_2].to_numpy()
-  data_dict['x_st_3'] = dataframe.iloc[:, end_st_2:end_st_3].to_numpy()
-  data_dict['y_st_1'] = dataframe.iloc[:, end_st_3:end_y1].to_numpy()
-  data_dict['y_st_2'] = dataframe.iloc[:, end_y1:].to_numpy()
+  if tabular:
+    features = dataframe.iloc[:, :end_st_3].to_numpy()
+    labels = dataframe.iloc[:, end_st_3:].to_numpy()
+
+    return features, labels
+  else:
+    data_dict = {}
+    data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy()
+    data_dict['x_s'] = dataframe.iloc[:, end_t:end_s].to_numpy()
+    data_dict['x_st_1'] = dataframe.iloc[:, end_s:end_st_1].to_numpy()
+    data_dict['x_st_2'] = dataframe.iloc[:, end_st_1:end_st_2].to_numpy()
+    data_dict['x_st_3'] = dataframe.iloc[:, end_st_2:end_st_3].to_numpy()
+    data_dict['y_st_1'] = dataframe.iloc[:, end_st_3:end_y1].to_numpy()
+    data_dict['y_st_2'] = dataframe.iloc[:, end_y1:].to_numpy()
+    
+    # reshape arrays
+    data_dict['x_st_2'] = np.reshape(data_dict['x_st_2'], 
+      (n_data, n_layers, vars_layers), order='C')
+    data_dict['x_st_3'] = np.reshape(data_dict['x_st_3'], 
+      (n_data, n_levels, vars_levels), order='C')
+    data_dict['y_st_1'] = np.reshape(data_dict['y_st_1'], 
+      (n_data, n_layers, 2), order='C')
+    data_dict['y_st_2'] = np.reshape(data_dict['y_st_2'], 
+      (n_data, n_levels, 4), order='C')
+    
+    return data_dict
   
-  # reshape arrays
-  data_dict['x_st_2'] = np.reshape(data_dict['x_st_2'], 
-    (n_data, n_layers, vars_layers), order='C')
-  data_dict['x_st_3'] = np.reshape(data_dict['x_st_3'], 
-    (n_data, n_levels, vars_levels), order='C')
-  data_dict['y_st_1'] = np.reshape(data_dict['y_st_1'], 
-    (n_data, n_layers, 2), order='C')
-  data_dict['y_st_2'] = np.reshape(data_dict['y_st_2'], 
-    (n_data, n_levels, 4), order='C')
   
-  return data_dict
-  
-  
-def convert_wf(dataframe: pd.DataFrame) -> dict:
+def convert_wf(dataframe: pd.DataFrame, tabular: bool) -> dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray]:
   """
   """
   # set values from config file
@@ -223,27 +249,33 @@ def convert_wf(dataframe: pd.DataFrame) -> dict:
   end_st = end_t1 + hist_window * n_states
   end_t2 = end_st + pred_window * n_times
   
-  # fill dataset dictionary
-  data_dict = {}
-  data_dict['x_s'] = dataframe.iloc[:, :end_s].to_numpy()
-  data_dict['x_t_1'] = dataframe.iloc[:, end_s:end_t1].to_numpy().astype(int)
-  data_dict['x_st'] = dataframe.iloc[:, end_t1:end_st].to_numpy()
-  data_dict['x_t_2'] = dataframe.iloc[:, end_st:end_t2].to_numpy().astype(int)
-  data_dict['y_st'] = dataframe.iloc[:, end_t2:].to_numpy()
+  if tabular:
+    features = dataframe.iloc[:, :end_t2].to_numpy()
+    labels = dataframe.iloc[:, end_t2:].to_numpy()
+
+    return features, labels
+  else:
+    # fill dataset dictionary
+    data_dict = {}
+    data_dict['x_s'] = dataframe.iloc[:, :end_s].to_numpy()
+    data_dict['x_t_1'] = dataframe.iloc[:, end_s:end_t1].to_numpy().astype(int)
+    data_dict['x_st'] = dataframe.iloc[:, end_t1:end_st].to_numpy()
+    data_dict['x_t_2'] = dataframe.iloc[:, end_st:end_t2].to_numpy().astype(int)
+    data_dict['y_st'] = dataframe.iloc[:, end_t2:].to_numpy()
+    
+    # either order='C' with shape (n_data, n_states, hist_window)
+    # or order='F' with shape (n_data, hist_window, n_states)
+    data_dict['x_t_1'] = np.reshape(data_dict['x_t_1'], 
+      (n_data, n_times, hist_window), order='C')
+    data_dict['x_t_2'] = np.reshape(data_dict['x_t_2'], 
+      (n_data, n_times, pred_window), order='C')
+    data_dict['x_st'] = np.reshape(data_dict['x_st'], 
+      (n_data, n_states, hist_window), order='C')
+    
+    return data_dict
   
-  # either order='C' with shape (n_data, n_states, hist_window)
-  # or order='F' with shape (n_data, hist_window, n_states)
-  data_dict['x_t_1'] = np.reshape(data_dict['x_t_1'], 
-    (n_data, n_times, hist_window), order='C')
-  data_dict['x_t_2'] = np.reshape(data_dict['x_t_2'], 
-    (n_data, n_times, pred_window), order='C')
-  data_dict['x_st'] = np.reshape(data_dict['x_st'], 
-    (n_data, n_states, hist_window), order='C')
   
-  return data_dict
-  
-  
-def convert_be(dataframe: pd.DataFrame) -> dict:
+def convert_be(dataframe: pd.DataFrame, tabular: bool) -> dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray]:
   """
   """
   # set values from config file
@@ -256,18 +288,24 @@ def convert_be(dataframe: pd.DataFrame) -> dict:
   start_st = end_t + 1
   end_st = start_st + hist_window * n_states
   
-  # fill dataset dictionary
-  data_dict = {}
-  data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy().astype(int)
-  data_dict['x_s'] = dataframe.iloc[:, end_t].to_numpy().astype(int)
-  data_dict['x_st'] = dataframe.iloc[:, start_st:end_st].to_numpy()
-  data_dict['y_st'] = dataframe.iloc[:, end_st:].to_numpy()
-  
-  # either order='C' with shape (n_data, n_states, hist_window)
-  # or order='F' with shape (n_data, hist_window, n_states)
-  data_dict['x_st'] = np.reshape(data_dict['x_st'], 
-    (n_data, n_states, hist_window), order='C')
-  
-  return data_dict
+  if tabular:
+    features = dataframe.iloc[:, :end_st].to_numpy()
+    labels = dataframe.iloc[:, end_st:].to_numpy()
+
+    return features, labels
+  else:
+    # fill dataset dictionary
+    data_dict = {}
+    data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy().astype(int)
+    data_dict['x_s'] = dataframe.iloc[:, end_t].to_numpy().astype(int)
+    data_dict['x_st'] = dataframe.iloc[:, start_st:end_st].to_numpy()
+    data_dict['y_st'] = dataframe.iloc[:, end_st:].to_numpy()
+    
+    # either order='C' with shape (n_data, n_states, hist_window)
+    # or order='F' with shape (n_data, hist_window, n_states)
+    data_dict['x_st'] = np.reshape(data_dict['x_st'], 
+      (n_data, n_states, hist_window), order='C')
+    
+    return data_dict
   
   
