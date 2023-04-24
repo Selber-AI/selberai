@@ -204,8 +204,10 @@ def convert_pa(df: pd.DataFrame, subtask: str) -> dict:
   data_dict['x_t'] = df.iloc[:, :end_t].to_numpy()
   data_dict['x_s'] = df.iloc[:, end_t:end_s].to_numpy()
   data_dict['x_st'] = df.iloc[:, end_s:end_st].to_numpy() 
-  data_dict['y_st'] = df.iloc[:, end_st:].to_numpy()
-  
+  if subtask == 'article_level':
+    data_dict['y_st'] = df.iloc[:, end_st:].to_numpy()
+  elif subtask == 'text_level':
+    data_dict['y_st'] = data_dict['x_st']
   return data_dict
   
   
