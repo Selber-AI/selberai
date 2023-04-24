@@ -2,6 +2,7 @@ import os
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
+import json
 
 import selberai.data.download_data as download_data
 
@@ -139,10 +140,12 @@ def load(name: str, subtask: str, sample_only: bool=False, tabular: bool=False,
     # convert train, val test
     train, val, test = convert_be(train, tabular), convert_be(val, tabular), convert_be(test, tabular)
     
-    if tabular:
-      # TODO: inject additional data?
-      add = add['x_s'].to_numpy().transpose()
-    else:
+
+    if not tabular:
+      # set some values
+      n_histo_bins = 100
+      n_channels = 3
+      
       # transform additional data from tabular to numpy array 
       add['x_s'] = add['x_s'].to_numpy()
       
@@ -150,7 +153,8 @@ def load(name: str, subtask: str, sample_only: bool=False, tabular: bool=False,
       add['x_s'] = np.transpose(add['x_s'])
       
       # reshape array
-      add['x_s'] = np.reshape(add['x_s'], (len(add['x_s']), 100, 3), order='C')
+      add['x_s'] = np.reshape(add['x_s'], 
+        (len(add['x_s']), n_histo_bins, n_channels), order='C')
       
       
   # convert WindFarm to unified representation
@@ -160,19 +164,64 @@ def load(name: str, subtask: str, sample_only: bool=False, tabular: bool=False,
     # convert train, val test
     train, val, test = convert_wf(train, tabular), convert_wf(val, tabular), convert_wf(test, tabular)
       
+      
   # convert ClimART to unified representation
   elif name == 'ClimART':
     add = None
     
-    # convert train, val test
-    train = convert_ca(train, subtask, tabular)
-    val = convert_ca(val, subtask, tabular)
-    test = convert_ca(test, subtask, tabular)
+    if not tabular:
+      # convert train, val, test
+      train = convert_ca(train, subtask)
+      val = convert_ca(val, subtask)
+      test = convert_ca(test, subtask)
+      
+      
+  elif name == 'Polianna':
+    # set path to additional data
+    path = path_to_data + 'additional/article_tokenized.json'
+    add = {}
+    
+    # load article data
+    with open(path, 'r') as json_file:
+      add['x_st'] = json.load(json_file)
+    
+    # load label data
+    if subtask == 'text_level':
+      path = path_to_data + 'additional/annotation_labels.json'
+      with open(path, 'r') as json_file:
+        add['y_st'] = json.load(json_file)
+    
+    if not tabular:
+      # convert train, val, test
+      train = convert_pa(train, subtask)
+      val = convert_pa(val, subtask)
+      test = convert_pa(test, subtask)
+      
       
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
   
   return dataset
+  
+
+def convert_pa(df: pd.DataFrame, subtask: str) -> dict:
+  """
+  """
+  # set starting and end indices of tabular features
+  end_t = 3
+  end_s = end_t + 2
+  end_st = end_s + 1
+  
+  # create the data dictionary in unified data format
+  data_dict = {}
+  data_dict['x_t'] = df.iloc[:, :end_t].to_numpy()
+  data_dict['x_s'] = df.iloc[:, end_t:end_s].to_numpy()
+  data_dict['x_st'] = df.iloc[:, end_s:end_st].to_numpy() 
+  if subtask == 'article_level':
+    data_dict['y_st'] = df.iloc[:, end_st:].to_numpy()
+  elif subtask == 'text_level':
+    data_dict['y_st'] = data_dict['x_st']
+  return data_dict
   
   
 def convert_ca(dataframe: pd.DataFrame, subtask: str, tabular: bool) -> dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray]:
