@@ -196,7 +196,7 @@ def convert_pa(df: pd.DataFrame, subtask: str) -> dict:
   """
   # set starting and end indices of tabular features
   end_t = 3
-  end_s = end_t + 3
+  end_s = end_t + 2
   end_st = end_s + 1
   
   # create the data dictionary in unified data format
