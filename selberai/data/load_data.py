@@ -151,6 +151,7 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
       # convert train, val test
       train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
       
+      
   # convert ClimART to unified representation
   elif name == 'ClimART':
     add = None
@@ -161,11 +162,10 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
       val = convert_ca(val, subtask)
       test = convert_ca(test, subtask)
       
+      
   elif name == 'Polianna':
-  
     # set path to additional data
     path = path_to_data + 'additional/article_tokenized.json'
-    
     add = {}
     
     # load article data
@@ -191,13 +191,25 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
   return dataset
   
 
-def convert_pa(dataframe: pd.DataFrame, subtask: str) -> dict:
+def convert_pa(df: pd.DataFrame, subtask: str) -> dict:
   """
   """
+  # set starting and end indices of tabular features
+  end_t = 3
+  end_s = end_t + 2
+  end_st = end_s + 1
   
+  # create the data dictionary in unified data format
+  data_dict = {}
+  data_dict['x_t'] = df.iloc[:, :end_t].to_numpy()
+  data_dict['x_s'] = df.iloc[:, end_t:end_s].to_numpy()
+  data_dict['x_st'] = df.iloc[:, end_s:end_st].to_numpy() 
+  if subtask == 'article_level':
+    data_dict['y_st'] = df.iloc[:, end_st:].to_numpy()
+  elif subtask == 'text_level':
+    data_dict['y_st'] = data_dict['x_st']
+  return data_dict
   
-  
-  return dataframe
   
 def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
   """
