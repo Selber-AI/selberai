@@ -124,6 +124,10 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
     add = {'x_s': pd.read_csv(path)}
     
     if not tabular:
+      # set some values
+      n_histo_bins = 100
+      n_channels = 3
+      
       # transform additional data from tabular to numpy array 
       add['x_s'] = add['x_s'].to_numpy()
       
@@ -131,7 +135,8 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
       add['x_s'] = np.transpose(add['x_s'])
       
       # reshape array
-      add['x_s'] = np.reshape(add['x_s'], (len(add['x_s']), 100, 3), order='C')
+      add['x_s'] = np.reshape(add['x_s'], 
+        (len(add['x_s']), n_histo_bins, n_channels), order='C')
       
       # convert train, val test
       train, val, test = convert_be(train), convert_be(val), convert_be(test)
@@ -150,16 +155,44 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
     add = None
     
     if not tabular:
-      # convert train, val test
+      # convert train, val, test
       train = convert_ca(train, subtask)
       val = convert_ca(val, subtask)
       test = convert_ca(test, subtask)
+      
+  elif name == 'Polianna':
+  
+    # set path to additional data
+    path = path_to_data + 'additional/article_tokenized.json'
+    
+    # load article data
+    add = {'x_st' : json.load(path)}
+    
+    # load label data
+    if subtask == 'text_level':
+      path = path_to_data + 'additional/annotation_labels.json'
+      add['y_st'] = json.load(path)
+    
+    if not tabular:
+      # convert train, val, test
+      train = convert_pa(train, subtask)
+      val = convert_pa(val, subtask)
+      test = convert_pa(test, subtask)
+      
       
   # set and return values as Dataset object
   dataset = Dataset(train, val, test, add)
   
   return dataset
   
+
+def convert_pa(dataframe: pd.DataFrame, subtask: str) -> dict:
+  """
+  """
+  
+  
+  
+  return dataframe
   
 def convert_ca(dataframe: pd.DataFrame, subtask: str) -> dict:
   """
