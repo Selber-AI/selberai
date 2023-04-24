@@ -151,6 +151,7 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
       # convert train, val test
       train, val, test = convert_wf(train), convert_wf(val), convert_wf(test)
       
+      
   # convert ClimART to unified representation
   elif name == 'ClimART':
     add = None
@@ -161,11 +162,10 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
       val = convert_ca(val, subtask)
       test = convert_ca(test, subtask)
       
+      
   elif name == 'Polianna':
-  
     # set path to additional data
     path = path_to_data + 'additional/article_tokenized.json'
-    
     add = {}
     
     # load article data
