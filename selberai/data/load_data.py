@@ -110,24 +110,18 @@ def load(name: str, subtask: str, sample_only: bool=False, tabular: bool=False,
   
   # iterate over train and concatenate
   print("Loading training data.")
-  pbar = tqdm(total=len(train_cont))
-  for f_name in train_cont:
+  for f_name in tqdm(train_cont):
     train = pd.concat((train, pd.read_csv(path_to_train+f_name)))
-    pbar.update(1)
     
   # iterate over val and concatenate
   print("Loading validation data.")
-  pbar = tqdm(total=len(val_cont))
-  for f_name in val_cont:
+  for f_name in tqdm(val_cont):
     val = pd.concat((val, pd.read_csv(path_to_val+f_name)))
-    pbar.update(1)
     
   # iterate over test and concatenate
   print("Loading testing data.")
-  pbar = tqdm(total=len(test_cont))
-  for f_name in test_cont:
+  for f_name in tqdm(test_cont):
     test = pd.concat((test, pd.read_csv(path_to_test+f_name)))
-    pbar.update(1)
     
   
   ###
