@@ -167,12 +167,14 @@ def load(name: str, subtask: str, sample_only=False, tabular=False,
     path = path_to_data + 'additional/article_tokenized.json'
     
     # load article data
-    add = {'x_st' : json.loads(path)}
+    with open(path, 'r') as json_file:
+      add = {'x_st' : json.loads(json_file)}
     
     # load label data
     if subtask == 'text_level':
       path = path_to_data + 'additional/annotation_labels.json'
-      add['y_st'] = json.loads(path)
+      with open(path, 'r') as json_file:
+        add['y_st'] = json.loads(json_file)
     
     if not tabular:
       # convert train, val, test
