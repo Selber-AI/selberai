@@ -11,10 +11,11 @@ class Dataset:
   """
   
   def __init__(self, 
-               train: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray], 
-               val: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray],
-               test: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray], 
-               add: dict[str, np.ndarray] | np.ndarray):
+    train: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame], 
+    val: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame],
+    test: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame], 
+    add: dict[str, np.ndarray] | None):
+    
     
     self.train = train
     self.val = val
@@ -22,7 +23,7 @@ class Dataset:
     self.add = add
     
 
-def load(name: str, subtask: str, sample_only: bool=False, tabular: bool=False, 
+def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform', 
   path_to_data: str=None, path_to_token: str=None) -> Dataset:
   """
   Loads the data into memory and returns it.
@@ -30,22 +31,29 @@ def load(name: str, subtask: str, sample_only: bool=False, tabular: bool=False,
   Parameters:
    - name (str): full name of the dataset to load.
    - subtask (str): subtask of the dataset to load.
-   - sample_only (bool): if True, loads only 1 csv file for each split. Default: False.
-   - tabular (bool): determines the output format.
+   - sample_only (bool): if True, loads only 1 csv file for each split. 
+   Default: False.
+   - form (str): determines the output format. Can be 'uniform', 'tabular' or 
+   'dataframe'. Default: 'uniform'
    - path_to_data (str):  path to the data folder containing all datasets.
    - path_to_token (str): path to the token for https://dataverse.harvard.edu
 
   Returns a Dataset object with the attributes 'train', 'val', 'test' and 'add'.
   
-  If the 'tabular' parameter is False, each attribute contains a dictionary with x_t, x_s, x_st, y data depending on the dataset.
+  If the 'form' parameter is 'uniform', each attribute contains a dictionary 
+  with x_t, x_s, x_st, y data depending on the dataset.
 
-  If the tabular' parameter is True, each split contains a tuple with the full features and labels in np.ndarray format,
-  while 'add' contains a np.ndarray.
+  If the 'form' parameter is 'tabular', each split contains a tuple with the 
+  full features and labels in np.ndarray format, while 'add' contains dict.
+  
+  if the 'form' parameter is 'dataframe', each attribute contains a single 
+  pandas dataframe with all features and labels.
   """
   
   # set standard path to data if not provided
   if path_to_data is None:
     path_to_data = 'datasets/{}/processed/'.format(name)
+    
   else:
     path_to_data += name + '/'
   
@@ -131,53 +139,64 @@ def load(name: str, subtask: str, sample_only: bool=False, tabular: bool=False,
   
   # convert BuildingElectricity to unified representation
   if name == 'BuildingElectricity':
+
+    # convert train, val test
+    train = convert_be(train, form)
+    val = convert_be(val, form)
+    test = convert_be(test, form)
+
+    ### Set additional ###
     # set path to additional data
     path = path_to_data+'additional/id_histo_map.csv'
     
     # read additional data
     add = {'x_s': pd.read_csv(path)}
-
-    # convert train, val test
-    train, val, test = convert_be(train, tabular), convert_be(val, tabular), convert_be(test, tabular)
+      
+  # convert Uber Movement to unified representation
+  elif name == 'UberMovement':
     
-
-    if not tabular:
-      # set some values
-      n_histo_bins = 100
-      n_channels = 3
-      
-      # transform additional data from tabular to numpy array 
-      add['x_s'] = add['x_s'].to_numpy()
-      
-      # transpose array
-      add['x_s'] = np.transpose(add['x_s'])
-      
-      # reshape array
-      add['x_s'] = np.reshape(add['x_s'], 
-        (len(add['x_s']), n_histo_bins, n_channels), order='C')
-      
-      
+    # if Uber Movement subtask is not 'cities_10', and sample_only=False,
+    # then additonal data must be loaded
+    train, val, test = load_correction_um(train, val, test, subtask, 
+      sample_only)
+    
+    # convert train, val test
+    train = convert_um(train, form)
+    val = convert_um(val, form)
+    test = convert_um(test, form)
+    
+    add = None
+  
+  
   # convert WindFarm to unified representation
   elif name == 'WindFarm':
-    add = None
     
     # convert train, val test
-    train, val, test = convert_wf(train, tabular), convert_wf(val, tabular), convert_wf(test, tabular)
-      
+    train = convert_wf(train, form)
+    val = convert_wf(val, form)
+    test = convert_wf(test, form)
+    
+    add = None
       
       
   # convert ClimART to unified representation
   elif name == 'ClimART':
-    add = None
     
-    if not tabular:
-      # convert train, val, test
-      train = convert_ca(train, subtask)
-      val = convert_ca(val, subtask)
-      test = convert_ca(test, subtask)
+    # convert train, val, test
+    train = convert_ca(train, subtask, form)
+    val = convert_ca(val, subtask, form)
+    test = convert_ca(test, subtask, form)
       
+    add = None
       
   elif name == 'Polianna':
+    
+    # convert train, val, test
+    train = convert_pa(train, subtask, form)
+    val = convert_pa(val, subtask, form)
+    test = convert_pa(test, subtask, form)
+    
+    ### Set additional ###  
     # set path to additional data
     path = path_to_data + 'additional/article_tokenized.json'
     add = {}
@@ -191,21 +210,31 @@ def load(name: str, subtask: str, sample_only: bool=False, tabular: bool=False,
       path = path_to_data + 'additional/annotation_labels.json'
       with open(path, 'r') as json_file:
         add['y_st'] = json.load(json_file)
-    
-    if not tabular:
-      # convert train, val, test
-      train = convert_pa(train, subtask)
-      val = convert_pa(val, subtask)
-      test = convert_pa(test, subtask)
-      
-      
-  # set and return values as Dataset object
+        
+  ### Set and return values as Dataset object ###
   dataset = Dataset(train, val, test, add)
   
   return dataset
   
 
-def convert_pa(df: pd.DataFrame, subtask: str) -> dict:
+
+def load_correction_um(train: pd.DataFrame, val: pd.DataFrame, 
+  test: pd.DataFrame, subtask: str, sample_only: bool) -> (pd.DataFrame, 
+  pd.DataFrame, pd.DataFrame):
+  """ TODO
+  """
+  pass
+
+
+def convert_um(df: pd.DataFrame, form: str) -> dict:
+  """ TODO
+  """
+  pass
+
+
+def convert_pa(dataframe: pd.DataFrame, subtask: str, form: str) -> (
+  dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] 
+  | tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
   # set starting and end indices of tabular features
@@ -213,20 +242,35 @@ def convert_pa(df: pd.DataFrame, subtask: str) -> dict:
   end_s = end_t + 2
   end_st = end_s + 1
   
-  # create the data dictionary in unified data format
-  data_dict = {}
-  data_dict['x_t'] = df.iloc[:, :end_t].to_numpy()
-  data_dict['x_s'] = df.iloc[:, end_t:end_s].to_numpy()
-  data_dict['x_st'] = df.iloc[:, end_s:end_st].to_numpy() 
-  if subtask == 'article_level':
-    data_dict['y_st'] = df.iloc[:, end_st:].to_numpy()
-  elif subtask == 'text_level':
-    data_dict['y_st'] = data_dict['x_st']
+
+  if form == 'uniform':
+    data_dict = {}
+    data_dict['x_t'] = df.iloc[:, :end_t].to_numpy()
+    data_dict['x_s'] = df.iloc[:, end_t:end_s].to_numpy()
+    data_dict['x_st'] = df.iloc[:, end_s:end_st].to_numpy()
+    if subtask == 'article_level':
+      data_dict['y_st'] = df.iloc[:, end_st:].to_numpy()
+    elif subtask == 'text_level':
+      data_dict['y_st'] = data_dict['x_st']
+    
+    return data_dict
   
-  return data_dict
+  elif form == 'tabular':
+    features = dataframe.iloc[:, :end_st].to_numpy()
+    labels = dataframe.iloc[:, end_st:].to_numpy()
+
+    return features, labels
+    
+  elif form == 'dataframe':
+    features = dataframe.iloc[:, :end_st]
+    labels = dataframe.iloc[:, end_st:]
+
+    return features, labels
   
   
-def convert_ca(dataframe: pd.DataFrame, subtask: str, tabular: bool) -> dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray]:
+def convert_ca(dataframe: pd.DataFrame, subtask: str, form: str) -> (
+  dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray 
+  | tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
   # set values from config file
@@ -250,12 +294,7 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str, tabular: bool) -> dict[str
   end_st_3 = end_st_2 + vars_levels * n_levels
   end_y1 = end_st_3 + 2 * n_layers
   
-  if tabular:
-    features = dataframe.iloc[:, :end_st_3].to_numpy()
-    labels = dataframe.iloc[:, end_st_3:].to_numpy()
-
-    return features, labels
-  else:
+  if form == 'uniform':
     data_dict = {}
     data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy()
     data_dict['x_s'] = dataframe.iloc[:, end_t:end_s].to_numpy()
@@ -276,9 +315,22 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str, tabular: bool) -> dict[str
       (n_data, n_levels, 4), order='C')
     
     return data_dict
+    
+  elif form == 'tabular':
+    features = dataframe.iloc[:, :end_st_3].to_numpy()
+    labels = dataframe.iloc[:, end_st_3:].to_numpy()
+
+    return features, labels
+    
+  elif form == 'dataframe':
+    features = dataframe.iloc[:, :end_st_3]
+    labels = dataframe.iloc[:, end_st_3:]
+
+    return features, labels
   
   
-def convert_wf(dataframe: pd.DataFrame, tabular: bool) -> dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray]:
+def convert_wf(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] | 
+  tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
   # set values from config file
@@ -294,13 +346,7 @@ def convert_wf(dataframe: pd.DataFrame, tabular: bool) -> dict[str, np.ndarray] 
   end_st = end_t1 + hist_window * n_states
   end_t2 = end_st + pred_window * n_times
   
-  if tabular:
-    features = dataframe.iloc[:, :end_t2].to_numpy()
-    labels = dataframe.iloc[:, end_t2:].to_numpy()
-
-    return features, labels
-  else:
-    # fill dataset dictionary
+  if form == 'uniform':
     data_dict = {}
     data_dict['x_s'] = dataframe.iloc[:, :end_s].to_numpy()
     data_dict['x_t_1'] = dataframe.iloc[:, end_s:end_t1].to_numpy().astype(int)
@@ -316,13 +362,27 @@ def convert_wf(dataframe: pd.DataFrame, tabular: bool) -> dict[str, np.ndarray] 
       (n_data, n_times, pred_window), order='C')
     data_dict['x_st'] = np.reshape(data_dict['x_st'], 
       (n_data, n_states, hist_window), order='C')
-    
+      
     return data_dict
+    
+  elif form == 'tabular':
+    features = dataframe.iloc[:, :end_t2].to_numpy()
+    labels = dataframe.iloc[:, end_t2:].to_numpy()
+
+    return features, labels
+    
+  elif form == 'dataframe':
+    features = dataframe.iloc[:, :end_t2]
+    labels = dataframe.iloc[:, end_t2:]
+
+    return features, labels
   
   
-def convert_be(dataframe: pd.DataFrame, tabular: bool) -> dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray]:
+def convert_be(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] | 
+  tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
+  
   # set values from config file
   hist_window = 24
   n_states = 9
@@ -333,13 +393,7 @@ def convert_be(dataframe: pd.DataFrame, tabular: bool) -> dict[str, np.ndarray] 
   start_st = end_t + 1
   end_st = start_st + hist_window * n_states
   
-  if tabular:
-    features = dataframe.iloc[:, :end_st].to_numpy()
-    labels = dataframe.iloc[:, end_st:].to_numpy()
-
-    return features, labels
-  else:
-    # fill dataset dictionary
+  if form == 'uniform':
     data_dict = {}
     data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy().astype(int)
     data_dict['x_s'] = dataframe.iloc[:, end_t].to_numpy().astype(int)
@@ -352,5 +406,17 @@ def convert_be(dataframe: pd.DataFrame, tabular: bool) -> dict[str, np.ndarray] 
       (n_data, n_states, hist_window), order='C')
     
     return data_dict
-  
+    
+  elif form == 'tabular':
+    features = dataframe.iloc[:, :end_st].to_numpy()
+    labels = dataframe.iloc[:, end_st:].to_numpy()
+
+    return features, labels
+    
+  elif form == 'dataframe':
+    features = dataframe.iloc[:, :end_st]
+    labels = dataframe.iloc[:, end_st:]
+    
+    return features, labels
+    
   
