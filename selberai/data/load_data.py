@@ -232,13 +232,15 @@ def convert_um(df: pd.DataFrame, form: str) -> dict:
   """ TODO
   """
   
-  end_s = 7
-  end_t = end_s + 4
+  end_s1 = 1
+  end_s2 = end_s1 + 6
+  end_t = end_s2 + 4
   
   if form == 'uniform':
     data_dict = {}
-    data_dict['x_s'] = df.iloc[:, :end_s].to_numpy()
-    data_dict['x_t'] = df.iloc[:, end_s:end_t].to_numpy()
+    data_dict['x_s1'] = df.iloc[:, :end_s1].to_numpy()
+    data_dict['x_s2'] = df.iloc[:, end_s1:end_s2].to_numpy()
+    data_dict['x_t'] = df.iloc[:, end_s2:end_t].to_numpy()
     data_dict['y_st'] = df.iloc[:, end_t:].to_numpy()
     
   elif form == 'tabular':
