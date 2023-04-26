@@ -257,13 +257,19 @@ def convert_pa(df: pd.DataFrame, subtask: str, form: str) -> (
   
   elif form == 'tabular':
     features = df.iloc[:, :end_st].to_numpy()
-    labels = df.iloc[:, end_st].to_numpy()
+    if subtask == 'article_level':
+      labels = df.iloc[:, end_st:].to_numpy()
+    elif subtask == 'text_level':
+      labels = df.iloc[:, end_s:end_st].to_numpy()
 
     return features, labels
     
   elif form == 'dataframe':
     features = df.iloc[:, :end_st]
-    labels = df.iloc[:, end_st:]
+    if subtask == 'article_level':
+      labels = df.iloc[:, end_st:]
+    elif subtask == 'text_level':
+      labels = df.iloc[:, end_s:end_st]
 
     return features, labels
   
