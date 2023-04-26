@@ -223,13 +223,35 @@ def load_correction_um(train: pd.DataFrame, val: pd.DataFrame,
   pd.DataFrame, pd.DataFrame):
   """ TODO
   """
-  pass
+  
+  
+  return train, val, test
 
 
 def convert_um(df: pd.DataFrame, form: str) -> dict:
   """ TODO
   """
-  pass
+  
+  end_s = 7
+  end_t = end_s + 4
+  
+  if form == 'uniform':
+    data_dict = {}
+    data_dict['x_s'] = df.iloc[:, :end_s].to_numpy()
+    data_dict['x_t'] = df.iloc[:, end_s:end_t].to_numpy()
+    data_dict['y_st'] = df.iloc[:, end_t:].to_numpy()
+    
+  elif form == 'tabular':
+    features = df.iloc[:, :end_t].to_numpy()
+    labels = df.iloc[:, end_t:].to_numpy()
+    
+    return features, labels
+    
+  elif form == 'dataframe':
+    features = df.iloc[:, :end_t]
+    labels = df.iloc[:, end_t:]
+
+    return features, labels
 
 
 def convert_pa(df: pd.DataFrame, subtask: str, form: str) -> (
