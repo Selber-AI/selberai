@@ -238,8 +238,8 @@ def convert_um(df: pd.DataFrame, form: str) -> dict:
   
   if form == 'uniform':
     data_dict = {}
-    data_dict['x_s1'] = df.iloc[:, :end_s1].to_numpy()
-    data_dict['x_s2'] = df.iloc[:, end_s1:end_s2].to_numpy()
+    data_dict['x_s_1'] = df.iloc[:, :end_s1].to_numpy()
+    data_dict['x_s_2'] = df.iloc[:, end_s1:end_s2].to_numpy()
     data_dict['x_t'] = df.iloc[:, end_s2:end_t].to_numpy()
     data_dict['y_st'] = df.iloc[:, end_t:].to_numpy()
     
