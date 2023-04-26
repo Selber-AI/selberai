@@ -257,7 +257,7 @@ def convert_pa(df: pd.DataFrame, subtask: str, form: str) -> (
   
   elif form == 'tabular':
     features = df.iloc[:, :end_st].to_numpy()
-    labels = df.iloc[:, end_st:].to_numpy()
+    labels = df.iloc[:, end_st].to_numpy()
 
     return features, labels
     
