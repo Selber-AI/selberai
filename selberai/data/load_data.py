@@ -267,8 +267,8 @@ def convert_pa(dataframe: pd.DataFrame, subtask: str, form: str) -> (
   
   
 def convert_ca(dataframe: pd.DataFrame, subtask: str, form: str) -> (
-  dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray 
-  | tuple[pd.DataFrame, pd.DataFrame]):
+  dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray | tuple[pd.DataFrame, pd.DataFrame]
+  ):
   """
   """
   # set values from config file
