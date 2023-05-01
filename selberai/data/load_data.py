@@ -11,9 +11,12 @@ class Dataset:
   """
   
   def __init__(self, 
-    train: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame], 
-    val: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame],
-    test: dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame], 
+    train: (dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | 
+      tuple[pd.DataFrame, pd.DataFrame]), 
+    val: (dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | 
+      tuple[pd.DataFrame, pd.DataFrame]),
+    test: (dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | 
+      tuple[pd.DataFrame, pd.DataFrame]), 
     add: dict[str, np.ndarray] | None):
     
     
@@ -155,11 +158,6 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
   # convert Uber Movement to unified representation
   elif name == 'UberMovement':
     
-    # if Uber Movement subtask is not 'cities_10', and sample_only=False,
-    # then additonal data must be loaded
-    train, val, test = load_correction_um(train, val, test, subtask, 
-      sample_only)
-    
     # convert train, val test
     train = convert_um(train, form)
     val = convert_um(val, form)
@@ -188,6 +186,16 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     test = convert_ca(test, subtask, form)
       
     add = None
+      
+  elif name == 'OpenCatalyst':
+    
+    # convert train, val, test
+    train = convert_oc(train, subtask, form)
+    val = convert_oc(val, subtask, form)
+    test = convert_oc(test, subtask, form)
+    
+    # TO DO
+    add = {}
       
   elif name == 'Polianna':
     
@@ -218,23 +226,9 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
   
 
 
-def load_correction_um(train: pd.DataFrame, val: pd.DataFrame, 
-  test: pd.DataFrame, subtask: str, sample_only: bool) -> (pd.DataFrame, 
-  pd.DataFrame, pd.DataFrame):
-  """ TODO
-  """
-  pass
-
-
-def convert_um(df: pd.DataFrame, form: str) -> dict:
-  """ TODO
-  """
-  pass
-
-
-def convert_pa(dataframe: pd.DataFrame, subtask: str, form: str) -> (
-  dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] 
-  | tuple[pd.DataFrame, pd.DataFrame]):
+def convert_pa(df: pd.DataFrame, subtask: str, form: str) -> (
+  dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | 
+  tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
   # set starting and end indices of tabular features
@@ -256,25 +250,41 @@ def convert_pa(dataframe: pd.DataFrame, subtask: str, form: str) -> (
     return data_dict
   
   elif form == 'tabular':
-    features = dataframe.iloc[:, :end_st].to_numpy()
-    labels = dataframe.iloc[:, end_st:].to_numpy()
+    features = df.iloc[:, :end_st].to_numpy()
+    if subtask == 'article_level':
+      labels = df.iloc[:, end_st:].to_numpy()
+    elif subtask == 'text_level':
+      labels = df.iloc[:, end_s:end_st].to_numpy()
 
     return features, labels
     
   elif form == 'dataframe':
-    features = dataframe.iloc[:, :end_st]
-    labels = dataframe.iloc[:, end_st:]
+    features = df.iloc[:, :end_st]
+    if subtask == 'article_level':
+      labels = df.iloc[:, end_st:]
+    elif subtask == 'text_level':
+      labels = df.iloc[:, end_s:end_st]
 
     return features, labels
   
   
-def convert_ca(dataframe: pd.DataFrame, subtask: str, form: str) -> (
-  dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray 
-  | tuple[pd.DataFrame, pd.DataFrame]):
+def convert_oc(df: pd.DataFrame, subtask: str, form: str) -> dict:
+  """
+  """
+  
+  # TO DO
+  features, labels = None, None
+  
+  return features, labels
+  
+  
+def convert_ca(df: pd.DataFrame, subtask: str, form: str) -> (
+  dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | 
+  tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
   # set values from config file
-  n_data = len(dataframe.index)
+  n_data = len(df.index)
   n_layers = 49
   n_levels = 50
   vars_global = 79 # 82 globals. 3 coordinates x,y,z extracted. are in x_s
@@ -296,13 +306,13 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str, form: str) -> (
   
   if form == 'uniform':
     data_dict = {}
-    data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy()
-    data_dict['x_s'] = dataframe.iloc[:, end_t:end_s].to_numpy()
-    data_dict['x_st_1'] = dataframe.iloc[:, end_s:end_st_1].to_numpy()
-    data_dict['x_st_2'] = dataframe.iloc[:, end_st_1:end_st_2].to_numpy()
-    data_dict['x_st_3'] = dataframe.iloc[:, end_st_2:end_st_3].to_numpy()
-    data_dict['y_st_1'] = dataframe.iloc[:, end_st_3:end_y1].to_numpy()
-    data_dict['y_st_2'] = dataframe.iloc[:, end_y1:].to_numpy()
+    data_dict['x_t'] = df.iloc[:, :end_t].to_numpy()
+    data_dict['x_s'] = df.iloc[:, end_t:end_s].to_numpy()
+    data_dict['x_st_1'] = df.iloc[:, end_s:end_st_1].to_numpy()
+    data_dict['x_st_2'] = df.iloc[:, end_st_1:end_st_2].to_numpy()
+    data_dict['x_st_3'] = df.iloc[:, end_st_2:end_st_3].to_numpy()
+    data_dict['y_st_1'] = df.iloc[:, end_st_3:end_y1].to_numpy()
+    data_dict['y_st_2'] = df.iloc[:, end_y1:].to_numpy()
     
     # reshape arrays
     data_dict['x_st_2'] = np.reshape(data_dict['x_st_2'], 
@@ -317,19 +327,19 @@ def convert_ca(dataframe: pd.DataFrame, subtask: str, form: str) -> (
     return data_dict
     
   elif form == 'tabular':
-    features = dataframe.iloc[:, :end_st_3].to_numpy()
-    labels = dataframe.iloc[:, end_st_3:].to_numpy()
+    features = df.iloc[:, :end_st_3].to_numpy()
+    labels = df.iloc[:, end_st_3:].to_numpy()
 
     return features, labels
     
   elif form == 'dataframe':
-    features = dataframe.iloc[:, :end_st_3]
-    labels = dataframe.iloc[:, end_st_3:]
+    features = df.iloc[:, :end_st_3]
+    labels = df.iloc[:, end_st_3:]
 
     return features, labels
   
   
-def convert_wf(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] | 
+def convert_wf(df: pd.DataFrame, form: str) -> (dict[str, np.ndarray] | 
   tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
@@ -338,7 +348,7 @@ def convert_wf(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
   pred_window = 288
   n_times = 3
   n_states = 10
-  n_data = len(dataframe.index)
+  n_data = len(df.index)
   
   # set starting and end indices of tabular features
   end_s = 2
@@ -348,11 +358,11 @@ def convert_wf(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
   
   if form == 'uniform':
     data_dict = {}
-    data_dict['x_s'] = dataframe.iloc[:, :end_s].to_numpy()
-    data_dict['x_t_1'] = dataframe.iloc[:, end_s:end_t1].to_numpy().astype(int)
-    data_dict['x_st'] = dataframe.iloc[:, end_t1:end_st].to_numpy()
-    data_dict['x_t_2'] = dataframe.iloc[:, end_st:end_t2].to_numpy().astype(int)
-    data_dict['y_st'] = dataframe.iloc[:, end_t2:].to_numpy()
+    data_dict['x_s'] = df.iloc[:, :end_s].to_numpy()
+    data_dict['x_t_1'] = df.iloc[:, end_s:end_t1].to_numpy().astype(int)
+    data_dict['x_st'] = df.iloc[:, end_t1:end_st].to_numpy()
+    data_dict['x_t_2'] = df.iloc[:, end_st:end_t2].to_numpy().astype(int)
+    data_dict['y_st'] = df.iloc[:, end_t2:].to_numpy()
     
     # either order='C' with shape (n_data, n_states, hist_window)
     # or order='F' with shape (n_data, hist_window, n_states)
@@ -366,19 +376,49 @@ def convert_wf(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
     return data_dict
     
   elif form == 'tabular':
-    features = dataframe.iloc[:, :end_t2].to_numpy()
-    labels = dataframe.iloc[:, end_t2:].to_numpy()
+    features = df.iloc[:, :end_t2].to_numpy()
+    labels = df.iloc[:, end_t2:].to_numpy()
 
     return features, labels
     
   elif form == 'dataframe':
-    features = dataframe.iloc[:, :end_t2]
-    labels = dataframe.iloc[:, end_t2:]
+    features = df.iloc[:, :end_t2]
+    labels = df.iloc[:, end_t2:]
 
     return features, labels
   
   
-def convert_be(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] | 
+def convert_um(df: pd.DataFrame, form: str) -> dict:
+  """
+  """
+  
+  end_s1 = 1
+  end_s2 = end_s1 + 6
+  end_t = end_s2 + 4
+  
+  if form == 'uniform':
+    data_dict = {}
+    data_dict['x_s_1'] = df.iloc[:, :end_s1].to_numpy()
+    data_dict['x_s_2'] = df.iloc[:, end_s1:end_s2].to_numpy()
+    data_dict['x_t'] = df.iloc[:, end_s2:end_t].to_numpy()
+    data_dict['y_st'] = df.iloc[:, end_t:].to_numpy()
+    
+    return data_dict
+    
+  elif form == 'tabular':
+    features = df.iloc[:, :end_t].to_numpy()
+    labels = df.iloc[:, end_t:].to_numpy()
+    
+    return features, labels
+    
+  elif form == 'dataframe':
+    features = df.iloc[:, :end_t]
+    labels = df.iloc[:, end_t:]
+
+    return features, labels
+  
+  
+def convert_be(df: pd.DataFrame, form: str) -> (dict[str, np.ndarray] | 
   tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
@@ -386,7 +426,7 @@ def convert_be(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
   # set values from config file
   hist_window = 24
   n_states = 9
-  n_data = len(dataframe.index)
+  n_data = len(df.index)
   
   # set starting and end indices of tabular features
   end_t = 5
@@ -395,10 +435,10 @@ def convert_be(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
   
   if form == 'uniform':
     data_dict = {}
-    data_dict['x_t'] = dataframe.iloc[:, :end_t].to_numpy().astype(int)
-    data_dict['x_s'] = dataframe.iloc[:, end_t].to_numpy().astype(int)
-    data_dict['x_st'] = dataframe.iloc[:, start_st:end_st].to_numpy()
-    data_dict['y_st'] = dataframe.iloc[:, end_st:].to_numpy()
+    data_dict['x_t'] = df.iloc[:, :end_t].to_numpy().astype(int)
+    data_dict['x_s'] = df.iloc[:, end_t].to_numpy().astype(int)
+    data_dict['x_st'] = df.iloc[:, start_st:end_st].to_numpy()
+    data_dict['y_st'] = df.iloc[:, end_st:].to_numpy()
     
     # either order='C' with shape (n_data, n_states, hist_window)
     # or order='F' with shape (n_data, hist_window, n_states)
@@ -408,14 +448,14 @@ def convert_be(dataframe: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
     return data_dict
     
   elif form == 'tabular':
-    features = dataframe.iloc[:, :end_st].to_numpy()
-    labels = dataframe.iloc[:, end_st:].to_numpy()
+    features = df.iloc[:, :end_st].to_numpy()
+    labels = df.iloc[:, end_st:].to_numpy()
 
     return features, labels
     
   elif form == 'dataframe':
-    features = dataframe.iloc[:, :end_st]
-    labels = dataframe.iloc[:, end_st:]
+    features = df.iloc[:, :end_st]
+    labels = df.iloc[:, end_st:]
     
     return features, labels
     
