@@ -3,6 +3,8 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import json
+from concurrent.futures import ThreadPoolExecutor
+
 
 import selberai.data.download_data as download_data
 
@@ -115,25 +117,17 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     val_cont = val_cont[:1]
     test_cont = test_cont[:1]
   
-  # set empty dataframes
-  train = pd.DataFrame()
-  val = pd.DataFrame()
-  test = pd.DataFrame()
-  
   # iterate over train and concatenate
   print("Loading training data.")
-  for f_name in tqdm(train_cont):
-    train = pd.concat((train, pd.read_csv(path_to_train+f_name)))
+  train = load_csv_fast(path_to_train, train_cont)
     
   # iterate over val and concatenate
   print("Loading validation data.")
-  for f_name in tqdm(val_cont):
-    val = pd.concat((val, pd.read_csv(path_to_val+f_name)))
-    
+  val = load_csv_fast(path_to_val, val_cont)
+
   # iterate over test and concatenate
   print("Loading testing data.")
-  for f_name in tqdm(test_cont):
-    test = pd.concat((test, pd.read_csv(path_to_test+f_name)))
+  test = load_csv_fast(path_to_test, test_cont)
     
   
   ###
@@ -459,4 +453,25 @@ def convert_be(df: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
     
     return features, labels
     
+  
+def load_csv_fast(dir: str, filenames: list[str]) -> pd.DataFrame:
+
+  def load_csv(path):
+    return pd.read_csv(path)
+
+  with ThreadPoolExecutor() as executor:
+    futures = [executor.submit(load_csv, dir + fname) for fname in filenames]
+    dfs = []
+    
+    for f in tqdm(futures):
+      dfs.append(f.result())
+
+      
+  ret = pd.concat(dfs, ignore_index=True, copy=False)
+  
+  
+  return ret
+  
+  
+  
   
