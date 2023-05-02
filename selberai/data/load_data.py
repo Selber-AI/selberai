@@ -3,7 +3,7 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import json
-from concurrent.futures import ThreadPoolExecutor, wait
+from concurrent.futures import ThreadPoolExecutor
 
 
 import selberai.data.download_data as download_data
@@ -125,7 +125,6 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
   print("Loading validation data.")
   val = load_csv_fast(path_to_val, val_cont)
 
-    
   # iterate over test and concatenate
   print("Loading testing data.")
   test = load_csv_fast(path_to_test, test_cont)
@@ -456,14 +455,23 @@ def convert_be(df: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
     
   
 def load_csv_fast(dir: str, filenames: list[str]) -> pd.DataFrame:
+
   def load_csv(path):
     return pd.read_csv(path)
 
   with ThreadPoolExecutor() as executor:
-    executor._max_workers
     futures = [executor.submit(load_csv, dir + fname) for fname in filenames]
     dfs = []
+    
     for f in tqdm(futures):
       dfs.append(f.result())
+
+      
   ret = pd.concat(dfs, ignore_index=True, copy=False)
+  
+  
   return ret
+  
+  
+  
+  
