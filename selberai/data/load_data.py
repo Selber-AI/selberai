@@ -69,8 +69,9 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
   check_and_download_data(name, subtask, path_to_data, path_to_token)
   
   # extend path for subtask
-  if subtask == 'is2rs' or subtask == 'is2re':
-    path_to_data_subtask = path_to_data + 'is2res' + '/'
+  if (subtask == 'oc20_is2rs' or subtask == 'oc22_is2rs' or 
+    subtask == 'oc20_is2re' or subtask == 'oc22_is2re'):
+    path_to_data_subtask = path_to_data + subtask[:-1] + 'es/'
   else:
     path_to_data_subtask = path_to_data + subtask + '/'
   
@@ -205,8 +206,9 @@ def check_and_download_data(name: str, subtask: str, path_to_data: str,
   """
   
   # extend path for subtask
-  if subtask == 'is2rs' or subtask == 'is2re':
-    path_to_data_subtask = path_to_data + 'is2res' + '/'
+  if (subtask == 'oc20_is2rs' or subtask == 'oc22_is2rs' or 
+    subtask == 'oc20_is2re' or subtask == 'oc22_is2re'):
+    path_to_data_subtask = path_to_data + subtask[:-1] + 'es/'
   else:
     path_to_data_subtask = path_to_data + subtask + '/'
   
