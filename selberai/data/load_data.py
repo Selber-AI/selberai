@@ -295,7 +295,7 @@ def convert_oc(dict_dataset: dict, subtask: str, form: str) -> dict:
       dict_x_st = {}
       dict_y_t = {}
       for index, item in enumerate(dict_dataset.items()):
-        dict_x_s[index] = item[1]['atoms']
+        dict_x_s[index] = item[1]['atomic_numbers']
         dict_x_st[index] = np.array(item[1]['initial_structure'])
         dict_y_t[index] = item[1]['relexed_energy']
       
@@ -310,7 +310,7 @@ def convert_oc(dict_dataset: dict, subtask: str, form: str) -> dict:
       dict_x_st = {}
       dict_y_st = {}
       for index, item in enumerate(dict_dataset.items()):
-        dict_x_s[index] = item[1]['atoms']
+        dict_x_s[index] = item[1]['atomic_numbers']
         dict_x_st[index] = np.array(item[1]['initial_structure'])
         dict_y_st[index] = np.array(item[1]['relaxed_strucutre'])
         
@@ -326,7 +326,7 @@ def convert_oc(dict_dataset: dict, subtask: str, form: str) -> dict:
       dict_y_t = {}
       dict_y_st = {}
       for index, item in enumerate(dict_dataset.items()):
-        dict_x_s[index] = item[1]['atoms']
+        dict_x_s[index] = item[1]['atomic_numbers']
         dict_x_st[index] = np.array(item[1]['structure'])
         dict_y_t[index] = item[1]['energy']
         dict_y_st[index] = np.array(item[1]['forces'])
