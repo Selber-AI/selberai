@@ -66,7 +66,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     path_to_data += name + '/'
   
   # check if data is available
-  check_and_download_data(name, subtask, path_to_data, path_to_token)
+  #check_and_download_data(name, subtask, path_to_data, path_to_token)
   
   # extend path 
   path_to_data_subtask = path_to_data + subtask + '/'
