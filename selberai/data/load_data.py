@@ -65,21 +65,20 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
   else:
     path_to_data += name + '/'
   
-  # extend path 
-  path_to_data += subtask + '/'
-  
   # check if data is available
   check_and_download_data(name, subtask, path_to_data, path_to_token)
   
+  # extend path 
+  path_to_data_subtask = path_to_data + subtask + '/'
   
   ###
   # Load training, validation and testing ###
   ###
 
   # set paths and read the directories
-  path_to_train = path_to_data + 'training/'
-  path_to_val = path_to_data + 'validation/'
-  path_to_test = path_to_data + 'testing/'
+  path_to_train = path_to_data_subtask + 'training/'
+  path_to_val = path_to_data_subtask + 'validation/'
+  path_to_test = path_to_data_subtask + 'testing/'
     
   # read directory content
   train_cont = os.listdir(path_to_train)
@@ -119,7 +118,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
 
     ### Set additional ###
     # set path to additional data
-    path = path_to_data+'additional/id_histo_map.csv'
+    path = path_to_data_subtask + 'additional/id_histo_map.csv'
     
     # read additional data
     add = {'x_s': pd.read_csv(path)}
@@ -164,7 +163,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     val = convert_oc(val, subtask, form)
     test = convert_oc(test, subtask, form)
     
-    path = path_to_data[:-len(subtask)+1] + 'additional/periodic_table.csv'
+    path = path_to_data + 'additional/periodic_table.csv'
     add['x_s'] = pd.read_csv(path)
     
       
@@ -177,7 +176,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     
     ### Set additional ###  
     # set path to additional data
-    path = path_to_data + 'additional/article_tokenized.json'
+    path = path_to_data_subtask + 'additional/article_tokenized.json'
     add = {}
     
     # load article data
@@ -186,7 +185,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     
     # load label data
     if subtask == 'text_level':
-      path = path_to_data + 'additional/annotation_labels.json'
+      path = path_to_data_subtask + 'additional/annotation_labels.json'
       with open(path, 'r') as json_file:
         add['y_st'] = json.load(json_file)
         
@@ -202,17 +201,18 @@ def check_and_download_data(name: str, subtask: str, path_to_data: str,
   """
   """
   
+  path_to_data_subtask = path_to_data + subtask
   # list directory of dataset
-  dir_cont = set(os.listdir(path_to_data))
+  dir_cont = set(os.listdir(path_to_data_subtask))
   
   # check if dataset available
   if ('training' in dir_cont and 'testing' in dir_cont and 
     'validation' in dir_cont):
     
     # set paths and read the directories
-    path_to_train = path_to_data + 'training/'
-    path_to_val = path_to_data + 'validation/'
-    path_to_test = path_to_data + 'testing/'
+    path_to_train = path_to_data_subtask + 'training/'
+    path_to_val = path_to_data_subtask + 'validation/'
+    path_to_test = path_to_data_subtask + 'testing/'
     
     # read content of available train, val and test directories
     dir_cont_train = os.listdir(path_to_train)
@@ -230,12 +230,11 @@ def check_and_download_data(name: str, subtask: str, path_to_data: str,
     
   else:
     data_avail = False
-    print('\nDataset is not available on {}!\n'.format(path_to_data))
+    print('\nDataset is not available on {}!\n'.format(path_to_data_subtask))
     
     
   # download data if not available or missing files
   if not data_avail:
-    path_to_data = path_to_data[:-(len(subtask)+1)]
     download_data.download(name, subtask, path_to_data, path_to_token)
     # TO DO: implement download of subtask data only
     
