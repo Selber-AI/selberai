@@ -3,8 +3,8 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import json
+import random
 from concurrent.futures import ThreadPoolExecutor
-
 
 import selberai.data.download_data as download_data
 
@@ -55,7 +55,10 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
   pandas dataframe with all features and labels.
   """
   
-  # set standard path to data if not provided
+  ###
+  # Set some paths and make sure data is available ###
+  ###
+  
   if path_to_data is None:
     path_to_data = 'datasets/{}/processed/'.format(name)
     
@@ -65,47 +68,19 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
   # extend path 
   path_to_data += subtask + '/'
   
-  # list directory of dataset
-  dir_cont = set(os.listdir(path_to_data))
-  
-  # set paths and read the directories
-  path_to_train = path_to_data + 'training/'
-  path_to_val = path_to_data + 'validation/'
-  path_to_test = path_to_data + 'testing/'
-  
-  # check if dataset available
-  if ('training' in dir_cont and 'testing' in dir_cont and 
-    'validation' in dir_cont):
-    
-    # read content of available train, val and test directories
-    dir_cont_train = os.listdir(path_to_train)
-    dir_cont_val = os.listdir(path_to_val)
-    dir_cont_test = os.listdir(path_to_test)
-    
-    # check if content is non-zero
-    if (len(dir_cont_train) != 0 and len(dir_cont_val) != 0 and
-      len(dir_cont_test) != 0):
-      data_avail = True
-    
-    else:
-      data_avail = False
-      print('\nDataset available, but some datasets are missing files!\n')
-    
-  else:
-    data_avail = False
-    print('\nDataset is not available on {}!\n'.format(path_to_data))
-  
-  # download data if not available or missing files
-  if not data_avail:
-    # TO DO: implement download of subtask data only
-    path_to_data = path_to_data[:-(len(subtask)+1)]
-    download_data.download(name, subtask, path_to_data, path_to_token)
+  # check if data is available
+  check_and_download_data(name, subtask, path_to_data, path_to_token)
   
   
   ###
   # Load training, validation and testing ###
   ###
-  
+
+  # set paths and read the directories
+  path_to_train = path_to_data + 'training/'
+  path_to_val = path_to_data + 'validation/'
+  path_to_test = path_to_data + 'testing/'
+    
   # read directory content
   train_cont = os.listdir(path_to_train)
   val_cont = os.listdir(path_to_val)
@@ -117,17 +92,17 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     val_cont = val_cont[:1]
     test_cont = test_cont[:1]
   
-  # iterate over train and concatenate
-  print("Loading training data.")
-  train = load_csv_fast(path_to_train, train_cont)
+  # Import data
+  print("\nIterate over all files and concatenate for train, val, test:")
+  if name == 'OpenCatalyst':
+    train = load_json_fast(path_to_train, train_cont)
+    val = load_json_fast(path_to_val, val_cont)
+    test = load_json_fast(path_to_test, test_cont)
     
-  # iterate over val and concatenate
-  print("Loading validation data.")
-  val = load_csv_fast(path_to_val, val_cont)
-
-  # iterate over test and concatenate
-  print("Loading testing data.")
-  test = load_csv_fast(path_to_test, test_cont)
+  else:
+    train = load_csv_fast(path_to_train, train_cont)
+    val = load_csv_fast(path_to_val, val_cont)
+    test = load_csv_fast(path_to_test, test_cont)
     
   
   ###
@@ -181,6 +156,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
       
     add = None
       
+      
   elif name == 'OpenCatalyst':
     
     # convert train, val, test
@@ -188,8 +164,9 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     val = convert_oc(val, subtask, form)
     test = convert_oc(test, subtask, form)
     
-    # TO DO
-    add = {}
+    path = path_to_data + 'additional/periodic_table.csv'
+    add['x_s'] = pd.read_csv(path)
+    
       
   elif name == 'Polianna':
     
@@ -213,11 +190,55 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
       with open(path, 'r') as json_file:
         add['y_st'] = json.load(json_file)
         
+        
   ### Set and return values as Dataset object ###
   dataset = Dataset(train, val, test, add)
   
   return dataset
   
+
+def check_and_download_data(name: str, subtask: str, path_to_data: str, 
+  path_to_token: str):
+  """
+  """
+  
+  # list directory of dataset
+  dir_cont = set(os.listdir(path_to_data))
+  
+  # check if dataset available
+  if ('training' in dir_cont and 'testing' in dir_cont and 
+    'validation' in dir_cont):
+    
+    # set paths and read the directories
+    path_to_train = path_to_data + 'training/'
+    path_to_val = path_to_data + 'validation/'
+    path_to_test = path_to_data + 'testing/'
+    
+    # read content of available train, val and test directories
+    dir_cont_train = os.listdir(path_to_train)
+    dir_cont_val = os.listdir(path_to_val)
+    dir_cont_test = os.listdir(path_to_test)
+    
+    # check if content is non-zero
+    if (len(dir_cont_train) != 0 and len(dir_cont_val) != 0 and
+      len(dir_cont_test) != 0):
+      data_avail = True
+    
+    else:
+      data_avail = False
+      print('\nDataset available, but some datasets are missing files!\n')
+    
+  else:
+    data_avail = False
+    print('\nDataset is not available on {}!\n'.format(path_to_data))
+    
+    
+  # download data if not available or missing files
+  if not data_avail:
+    path_to_data = path_to_data[:-(len(subtask)+1)]
+    download_data.download(name, subtask, path_to_data, path_to_token)
+    # TO DO: implement download of subtask data only
+    
 
 
 def convert_pa(df: pd.DataFrame, subtask: str, form: str) -> (
@@ -225,6 +246,7 @@ def convert_pa(df: pd.DataFrame, subtask: str, form: str) -> (
   tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
+  
   # set starting and end indices of tabular features
   end_t = 3
   end_s = end_t + 2
@@ -262,14 +284,64 @@ def convert_pa(df: pd.DataFrame, subtask: str, form: str) -> (
     return features, labels
   
   
-def convert_oc(df: pd.DataFrame, subtask: str, form: str) -> dict:
+def convert_oc(dict_dataset: dict, subtask: str, form: str) -> dict:
   """
   """
   
-  # TO DO
-  features, labels = None, None
+  if form == 'uniform':
+    
+    if subtask == 'oc20_is2re' or subtask == 'oc22_is2re':
+      dict_x_s = {}
+      dict_x_st = {}
+      dict_y_t = {}
+      for index, item in enumerate(dict_dataset.items()):
+        dict_x_s[index] = item['atoms']
+        dict_x_st[index] = np.array(item['initial_structure'])
+        dict_y_t[index] = item['relexed_energy']
+      
+      data_dict = {
+        'x_s': dict_x_s,
+        'x_st': dict_x_st,
+        'y_t': dict_y_t
+      }
+      
+    elif subtask == 'oc20_is2rs' or subtask == 'oc22_is2rs':
+      dict_x_s = {}
+      dict_x_st = {}
+      dict_y_st = {}
+      for index, item in enumerate(dict_dataset.items()):
+        dict_x_s[index] = item['atoms']
+        dict_x_st[index] = np.array(item['initial_structure'])
+        dict_y_st[index] = np.array(item['relaxed_strucutre'])
+      data_dict = {
+        'x_s': dict_x_s,
+        'x_st': dict_x_st,
+        'y_st': dict_y_st
+      }
+      
+    elif subtask == 'oc20_s2ef' or subtask == 'oc22_s2ef':
+      dict_x_s = {}
+      dict_x_st = {}
+      dict_y_t = {}
+      dict_y_st = {}
+      for index, item in enumerate(dict_dataset.items()):
+        dict_x_s[index] = item['atoms']
+        dict_x_st[index] = np.array(item['structure'])
+        dict_y_t[index] = item['energy']
+        dict_y_st[index] = np.array(item['forces'])
+      data_dict = {
+        'x_s': dict_x_s,
+        'x_st': dict_x_st,
+        'y_t': dict_y_t,
+        'y_st': dict_y_st
+      }
+      
+    return data_dict
   
-  return features, labels
+  else:
+    print("\ntabular and dataframe return formats are not implemented yet.",
+      "Please choose form=uniform to load Open Catalyst data.")
+    
   
   
 def convert_ca(df: pd.DataFrame, subtask: str, form: str) -> (
@@ -277,6 +349,7 @@ def convert_ca(df: pd.DataFrame, subtask: str, form: str) -> (
   tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
+  
   # set values from config file
   n_data = len(df.index)
   n_layers = 49
@@ -337,6 +410,7 @@ def convert_wf(df: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
   tuple[np.ndarray, np.ndarray] | tuple[pd.DataFrame, pd.DataFrame]):
   """
   """
+  
   # set values from config file
   hist_window = 288
   pred_window = 288
@@ -453,24 +527,45 @@ def convert_be(df: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
     
     return features, labels
     
+    
+    
+def load_json_fast(dir: str, filenames: list[str]) -> dict:
+  """
+  """
+  
+  def load_json(path):
+    with open(path, 'r') as json_file:
+      data_dict = json.load(json_file)
+  
+    return data_dict
+  
+  with ThreadPoolExecutor() as executor:
+    futures = [executor.submit(load_json, dir + fname) for fname in filenames]
+    dict_concantenated = {}
+    for f in tqdm(futures):
+      dict_concantenated.update(f.result())
+      
+  return dict_concantenated
+  
+  
   
 def load_csv_fast(dir: str, filenames: list[str]) -> pd.DataFrame:
-
+  """
+  """
+  
   def load_csv(path):
     return pd.read_csv(path)
 
   with ThreadPoolExecutor() as executor:
     futures = [executor.submit(load_csv, dir + fname) for fname in filenames]
     dfs = []
-    
     for f in tqdm(futures):
       dfs.append(f.result())
 
       
-  ret = pd.concat(dfs, ignore_index=True, copy=False)
+  df_concatenated = pd.concat(dfs, ignore_index=True, copy=False)
   
-  
-  return ret
+  return df_concatenated
   
   
   
