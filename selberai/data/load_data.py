@@ -201,7 +201,9 @@ def check_and_download_data(name: str, subtask: str, path_to_data: str,
   """
   """
   
-  path_to_data_subtask = path_to_data + subtask
+  # set path to subtask
+  path_to_data_subtask = path_to_data + subtask + '/'
+  
   # list directory of dataset
   dir_cont = set(os.listdir(path_to_data_subtask))
   
