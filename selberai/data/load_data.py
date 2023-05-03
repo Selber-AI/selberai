@@ -66,10 +66,13 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     path_to_data += name + '/'
   
   # check if data is available
-  #check_and_download_data(name, subtask, path_to_data, path_to_token)
+  check_and_download_data(name, subtask, path_to_data, path_to_token)
   
-  # extend path 
-  path_to_data_subtask = path_to_data + subtask + '/'
+  # extend path for subtask
+  if subtask == 'is2rs' or subtask == 'is2re':
+    path_to_data_subtask = path_to_data + 'is2res' + '/'
+  else:
+    path_to_data_subtask = path_to_data + subtask + '/'
   
   ###
   # Load training, validation and testing ###
@@ -201,8 +204,11 @@ def check_and_download_data(name: str, subtask: str, path_to_data: str,
   """
   """
   
-  # set path to subtask
-  path_to_data_subtask = path_to_data + subtask + '/'
+  # extend path for subtask
+  if subtask == 'is2rs' or subtask == 'is2re':
+    path_to_data_subtask = path_to_data + 'is2res' + '/'
+  else:
+    path_to_data_subtask = path_to_data + subtask + '/'
   
   # list directory of dataset
   dir_cont = set(os.listdir(path_to_data_subtask))
