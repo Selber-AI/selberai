@@ -164,7 +164,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     val = convert_oc(val, subtask, form)
     test = convert_oc(test, subtask, form)
     
-    path = path_to_data + 'additional/periodic_table.csv'
+    path = path_to_data + 'metadata/periodic_table.csv'
     add['x_s'] = pd.read_csv(path)
     
       
