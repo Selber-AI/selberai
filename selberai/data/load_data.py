@@ -112,25 +112,17 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
   # Convert to unified data representation and potentially load additional ###
   ###
   
-  # convert BuildingElectricity to unified representation
   if name == 'BuildingElectricity':
-
-    # convert train, val test
+  
     train = convert_be(train, form)
     val = convert_be(val, form)
     test = convert_be(test, form)
+    
+    add = load_add_be(path_to_data_subtask, form)
 
-    ### Set additional ###
-    # set path to additional data
-    path = path_to_data_subtask + 'additional/id_histo_map.csv'
-    
-    # read additional data
-    add = {'x_s': pd.read_csv(path)}
-      
-  # convert Uber Movement to unified representation
+
   elif name == 'UberMovement':
-    
-    # convert train, val test
+  
     train = convert_um(train, form)
     val = convert_um(val, form)
     test = convert_um(test, form)
@@ -138,10 +130,8 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     add = None
   
   
-  # convert WindFarm to unified representation
   elif name == 'WindFarm':
-    
-    # convert train, val test
+  
     train = convert_wf(train, form)
     val = convert_wf(val, form)
     test = convert_wf(test, form)
@@ -149,50 +139,33 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     add = None
       
       
-  # convert ClimART to unified representation
   elif name == 'ClimART':
-    
-    # convert train, val, test
+  
     train = convert_ca(train, subtask, form)
     val = convert_ca(val, subtask, form)
     test = convert_ca(test, subtask, form)
-      
+    
     add = None
       
       
   elif name == 'OpenCatalyst':
     
-    # convert train, val, test
     train = convert_oc(train, subtask, form)
     val = convert_oc(val, subtask, form)
     test = convert_oc(test, subtask, form)
     
-    path = path_to_data + 'additional/periodic_table.csv'
-    add = {'x_s': pd.read_csv(path)}
+    add = load_add_oc(path_to_data, form)
+    
     
       
   elif name == 'Polianna':
     
-    # convert train, val, test
     train = convert_pa(train, subtask, form)
     val = convert_pa(val, subtask, form)
     test = convert_pa(test, subtask, form)
     
-    ### Set additional ###  
-    # set path to additional data
-    path = path_to_data_subtask + 'additional/article_tokenized.json'
-    add = {}
+    add = load_add_pa(path_to_data_subtask, subtask, form)
     
-    # load article data
-    with open(path, 'r') as json_file:
-      add['x_st'] = json.load(json_file)
-    
-    # load label data
-    if subtask == 'text_level':
-      path = path_to_data_subtask + 'additional/annotation_labels.json'
-      with open(path, 'r') as json_file:
-        add['y_st'] = json.load(json_file)
-        
         
   ### Set and return values as Dataset object ###
   dataset = Dataset(train, val, test, add)
@@ -249,7 +222,6 @@ def check_and_download_data(name: str, subtask: str, path_to_data: str,
     # TO DO: implement download of subtask data only
     
 
-
 def convert_pa(df: pd.DataFrame, subtask: str, form: str) -> (
   dict[str, np.ndarray] | tuple[np.ndarray, np.ndarray] | 
   tuple[pd.DataFrame, pd.DataFrame]):
@@ -291,6 +263,26 @@ def convert_pa(df: pd.DataFrame, subtask: str, form: str) -> (
       labels = df.iloc[:, end_s:end_st]
 
     return features, labels
+  
+  
+def load_add_pa(path_to_data_subtask: str, subtask: str):
+  """
+  """
+    
+  path = path_to_data_subtask + 'additional/article_tokenized.json'
+  add = {}
+  
+  # load article data
+  with open(path, 'r') as json_file:
+    add['x_st'] = json.load(json_file)
+  
+  # load label data
+  if subtask == 'text_level':
+    path = path_to_data_subtask + 'additional/annotation_labels.json'
+    with open(path, 'r') as json_file:
+      add['y_st'] = json.load(json_file)
+  
+  return add
   
   
 def convert_oc(dict_dataset: dict, subtask: str, form: str) -> dict:
@@ -352,7 +344,40 @@ def convert_oc(dict_dataset: dict, subtask: str, form: str) -> dict:
   else:
     print("\ntabular and dataframe return formats are not implemented yet.",
       "Please choose form=uniform to load Open Catalyst data.")
-    
+  
+  
+def load_add_oc(path_to_data: str, form: str):
+  """
+  """
+  
+  # set paths
+  path_x_s = path_to_data + 'additional/periodic_table.csv'
+  path_x_s_1 = path_to_data + 'additional/numeric_feat.csv'
+  path_x_s_2 = path_to_data + 'additional/ordinal_feat.csv'
+  path_x_s_3 = path_to_data + 'additional/onehot_ox_feat.csv'
+  
+  # load data
+  x_s = pd.read_csv(path_x_s)
+  x_s_1 = pd.read_csv(path_x_s_1)
+  x_s_2 = pd.read_csv(path_x_s_2)
+  x_s_3 = pd.read_csv(path_x_s_3)
+  
+  # transform to numpy arrays if from != 'dataframe'  
+  if form == 'uniform' or form == 'tabular':
+    x_s = x_s.iloc[:, 1:].to_numpy()
+    x_s_1 = x_s_1.iloc[:, 1:].to_numpy()
+    x_s_2 = x_s_2.iloc[:, 1:].to_numpy()
+    x_s_3 = x_s_3.iloc[:, 1:].to_numpy()
+  
+  # set return value
+  add = {
+    'x_s': x_s,
+    'x_s_1': x_s_1,
+    'x_s_2': x_s_2,
+    'x_s_3': x_s_3
+  }
+  
+  return add
   
   
 def convert_ca(df: pd.DataFrame, subtask: str, form: str) -> (
@@ -538,6 +563,23 @@ def convert_be(df: pd.DataFrame, form: str) -> (dict[str, np.ndarray] |
     
     return features, labels
     
+    
+def load_add_be(path_to_data_subtask: str, form: str):
+  """
+  """
+  
+  # set path and load
+  path = path_to_data_subtask + 'additional/id_histo_map.csv'
+  x_s = pd.read_csv(path)
+  
+  # transform is chosen such
+  if form == 'uniform' or form == 'tabular':
+    x_s = x_s.to_numpy()
+    
+  # set as dictionary and return value
+  add = {'x_s': x_s}
+  
+  return add    
     
     
 def load_json_fast(dir: str, filenames: list[str]) -> dict:
