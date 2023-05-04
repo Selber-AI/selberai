@@ -370,10 +370,12 @@ def load_add_oc(path_to_data: str, form: str):
     x_s_3 = x_s_3.to_numpy()
   
   # set return value
-  add = {'x_s': x_s}
-  add = {'x_s_1': x_s_1}
-  add = {'x_s_2': x_s_2}
-  add = {'x_s_3': x_s_3}
+  add = {
+    'x_s': x_s,
+    'x_s_1': x_s_1,
+    'x_s_2': x_s_2,
+    'x_s_3': x_s_3
+  }
   
   return add
   
