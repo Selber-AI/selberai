@@ -364,10 +364,10 @@ def load_add_oc(path_to_data: str, form: str):
   
   # transform to numpy arrays if from != 'dataframe'  
   if form == 'uniform' or form == 'tabular':
-    x_s = x_s.to_numpy()
-    x_s_1 = x_s_1.to_numpy()
-    x_s_2 = x_s_2.to_numpy()
-    x_s_3 = x_s_3.to_numpy()
+    x_s = x_s.to_numpy().iloc[:, 1:]
+    x_s_1 = x_s_1.to_numpy().iloc[:, 1:]
+    x_s_2 = x_s_2.to_numpy().iloc[:, 1:]
+    x_s_3 = x_s_3.to_numpy().iloc[:, 1:]
   
   # set return value
   add = {
