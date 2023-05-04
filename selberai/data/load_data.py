@@ -352,17 +352,28 @@ def load_add_oc(path_to_data_subtask: str, form: str):
   
   # set paths
   path_x_s = path_to_data_subtask + 'additional/periodic_table.csv'
-  path_x_s_1 = path_to_data_subtask + 'additional/numeric_features.csv'
-  path_x_s_2 = path_to_data_subtask + 'additional/ordinal_features.csv'
-  path_x_s_3 = path_to_data_subtask + 'additional/onehot_features.csv'
+  path_x_s_1 = path_to_data_subtask + 'additional/numeric_feat.csv'
+  path_x_s_2 = path_to_data_subtask + 'additional/ordinal_feat.csv'
+  path_x_s_3 = path_to_data_subtask + 'additional/onehot_ox_feat.csv'
   
   # load data
   x_s = pd.read_csv(path_x_s)
+  x_s_1 = pd.read_csv(path_x_s_1)
+  x_s_2 = pd.read_csv(path_x_s_2)
+  x_s_3 = pd.read_csv(path_x_s_3)
   
+  # transform to numpy arrays if from != 'dataframe'  
   if form == 'uniform' or form == 'tabular':
-    add = {'x_s': pd.read_csv(path)}
+    x_s = x_s.to_numpy()
+    x_s_1 = x_s_1.to_numpy()
+    x_s_2 = x_s_2.to_numpy()
+    x_s_3 = x_s_3.to_numpy()
   
-  
+  # set return value
+  add = {'x_s': x_s}
+  add = {'x_s_1': x_s_1}
+  add = {'x_s_2': x_s_2}
+  add = {'x_s_3': x_s_3}
   
   return add
   
