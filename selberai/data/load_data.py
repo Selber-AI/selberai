@@ -154,7 +154,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     val = convert_oc(val, subtask, form)
     test = convert_oc(test, subtask, form)
     
-    add = load_add_oc(path_to_data_subtask, form)
+    add = load_add_oc(path_to_data, form)
     
     
       
@@ -346,15 +346,15 @@ def convert_oc(dict_dataset: dict, subtask: str, form: str) -> dict:
       "Please choose form=uniform to load Open Catalyst data.")
   
   
-def load_add_oc(path_to_data_subtask: str, form: str):
+def load_add_oc(path_to_data: str, form: str):
   """
   """
   
   # set paths
-  path_x_s = path_to_data_subtask + 'additional/periodic_table.csv'
-  path_x_s_1 = path_to_data_subtask + 'additional/numeric_feat.csv'
-  path_x_s_2 = path_to_data_subtask + 'additional/ordinal_feat.csv'
-  path_x_s_3 = path_to_data_subtask + 'additional/onehot_ox_feat.csv'
+  path_x_s = path_to_data + 'additional/periodic_table.csv'
+  path_x_s_1 = path_to_data + 'additional/numeric_feat.csv'
+  path_x_s_2 = path_to_data + 'additional/ordinal_feat.csv'
+  path_x_s_3 = path_to_data + 'additional/onehot_ox_feat.csv'
   
   # load data
   x_s = pd.read_csv(path_x_s)
