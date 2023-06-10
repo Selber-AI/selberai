@@ -164,7 +164,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     val = convert_pa(val, subtask, form)
     test = convert_pa(test, subtask, form)
     
-    add = load_add_pa(path_to_data_subtask, subtask, form)
+    add = load_add_pa(path_to_data_subtask, subtask)
     
         
   ### Set and return values as Dataset object ###
