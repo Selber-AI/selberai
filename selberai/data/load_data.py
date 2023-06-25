@@ -3,7 +3,6 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import json
-import random
 from concurrent.futures import ThreadPoolExecutor
 
 import selberai.data.download_data as download_data
@@ -96,16 +95,17 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     test_cont = test_cont[:1]
   
   # Import data
-  print("\nIterate over all files and concatenate for train, val, test:")
+  print("\nLoading dataset splits for train, validation and testing:")
+  load_func = None
   if name == 'OpenCatalyst':
-    train = load_json_fast(path_to_train, train_cont)
-    val = load_json_fast(path_to_val, val_cont)
-    test = load_json_fast(path_to_test, test_cont)
-    
+    load_func = load_json_fast
   else:
-    train = load_csv_fast(path_to_train, train_cont)
-    val = load_csv_fast(path_to_val, val_cont)
-    test = load_csv_fast(path_to_test, test_cont)
+    load_func = load_csv_fast
+
+  train = load_func(path_to_train, train_cont)
+  val = load_func(path_to_val, val_cont)
+  test = load_func(path_to_test, test_cont)
+  
     
   
   ###
@@ -164,8 +164,7 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
     val = convert_pa(val, subtask, form)
     test = convert_pa(test, subtask, form)
     
-    add = load_add_pa(path_to_data_subtask, subtask, form)
-    
+    add = load_add_pa(path_to_data_subtask, subtask)
         
   ### Set and return values as Dataset object ###
   dataset = Dataset(train, val, test, add)
@@ -601,13 +600,13 @@ def load_json_fast(dir: str, filenames: list[str]) -> dict:
   return dict_concantenated
   
   
-  
+
 def load_csv_fast(dir: str, filenames: list[str]) -> pd.DataFrame:
   """
   """
   
   def load_csv(path):
-    return pd.read_csv(path)
+    return pd.read_csv(path, dtype=np.float32)
 
   with ThreadPoolExecutor() as executor:
     futures = [executor.submit(load_csv, dir + fname) for fname in filenames]
