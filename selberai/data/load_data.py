@@ -3,7 +3,7 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import json
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 import selberai.data.download_data as download_data
 
@@ -99,6 +99,8 @@ def load(name: str, subtask: str, sample_only: bool=False, form: str='uniform',
   load_func = None
   if name == 'OpenCatalyst':
     load_func = load_json_fast
+    if form != "uniform":
+      raise ValueError("Tabular and DataFrame return formats are not implemented yet, \nPlease choose form=uniform to load Open Catalyst data.")
   else:
     load_func = load_csv_fast
 
@@ -341,8 +343,8 @@ def convert_oc(dict_dataset: dict, subtask: str, form: str) -> dict:
     return data_dict
   
   else:
-    print("\ntabular and dataframe return formats are not implemented yet.",
-      "Please choose form=uniform to load Open Catalyst data.")
+    raise ValueError("Tabular and DataFrame return formats are not implemented yet, \nPlease choose form=uniform to load Open Catalyst data.")
+
   
   
 def load_add_oc(path_to_data: str, form: str):
@@ -608,7 +610,7 @@ def load_csv_fast(dir: str, filenames: list[str]) -> pd.DataFrame:
   def load_csv(path):
     return pd.read_csv(path, dtype=np.float32)
 
-  with ThreadPoolExecutor() as executor:
+  with ProcessPoolExecutor() as executor:
     futures = [executor.submit(load_csv, dir + fname) for fname in filenames]
     dfs = []
     for f in tqdm(futures):
