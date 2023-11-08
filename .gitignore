@@ -1,0 +1,5 @@
+.pypirc
+.pypirc_test
+setup.cfg
+
+selberai/__pycache__
