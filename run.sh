@@ -1,4 +1,3 @@
-#!/bin/bash
 
 while getopts "br" flag; do
   case "$flag" in
@@ -71,7 +70,32 @@ elif [ $APP = "pypi_real" ]; then
     docker run app_pypi
   fi
 
-
+elif [ $APP = "docker_hub" ]; then
+  
+  docker login
+  
+  if [ $BUILD -eq 1 ]; then
+    docker build -t app_dockerhub -f Dockerhub/Dockerfile .
+  fi
+  
+  if [ $RUN -eq 1 ]; then
+    docker tag app_dockerhub:latest aryandoustarsam/selberai:latest
+    docker push aryandoustarsam/selberai:latest
+  fi
+  
+elif [ $APP = "docker_hub_notebook" ]; then
+  
+  docker login
+  
+  if [ $BUILD -eq 1 ]; then
+    docker build -t app_dockerhub_notebook -f Dockerhub_notebook/Dockerfile .
+  fi
+  
+  if [ $RUN -eq 1 ]; then
+    docker tag app_dockerhub_notebook:latest aryandoustarsam/selberai:jupyter
+    docker push aryandoustarsam/selberai:jupyter
+  fi
+  
 fi
 
 
