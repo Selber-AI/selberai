@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+    integrationtest:
+        build:
+            context: ./
+            dockerfile: Docker_testintegration/Dockerfile
+        volumes: 
+            - .:/selberai
+    
+    unittest:
+        build:
+            context: ./
+            dockerfile: Docker_testunit/Dockerfile
+        volumes:
+            - .:/selberai
+

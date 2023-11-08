@@ -1,1 +1,12 @@
-selberai/__pycache__
+.pypirc
+.pypirc_test
+setup.cfg
+
+Docker_pypi/
+Docker_pypitest/
+Dockerhub/
+Dockerhub_notebook/
+
+src/selberai/__pycache__
+
+
