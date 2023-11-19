@@ -84,17 +84,17 @@ Do NOT use Rebase on commits that you have already pushed to a remote repository
 
 ## Lead developer
 
-Upload developed software package to [the test PyPI platform](https://test.pypi.org/manage/projects/):
+Upload package to [the test PyPI platform](https://test.pypi.org/manage/projects/):
 ```
 ./run.sh -br pypi_test
 ```
 
-Upload developed software package to [the real PyPI platform](https://pypi.org/manage/projects/):
+Upload package to [the real PyPI platform](https://pypi.org/manage/projects/):
 ```
 ./run.sh -br pypi_real
 ```
 
-Upload package images to Dockerhub. Login to Dockerhub with your credentials. Build Dockerhub images with and without jupyter notebook. Tag the built images. Push built and tagged images to Dockerhub repository:
+Upload package Docker images to Dockerhub. Login to Dockerhub with your credentials. Build Dockerhub images with and without jupyter notebook. Tag the built images. Push built and tagged images to Dockerhub repository:
 ```
 ./run.sh -br docker_hub
 ./run.sh -br docker_hub_notebook
