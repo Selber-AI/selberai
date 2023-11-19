@@ -3,8 +3,32 @@
 The goal of this package is to implementation general Artificial Intelligence (AI) techniques with a focus on tackling climate change.
 
 
+## Getting started
 
-## Contributions
+Comming soon!
+
+
+## Collaborators
+
+Run jupyter notebook inside Docker with mounted volume:
+```
+./run.sh -br notebook
+```
+
+Run unit and integration tests using Docker-compose:
+```
+./run.sh -br all_tests
+```
+
+Run only integration tests:
+```
+./run.sh -br integration_test
+```
+
+Run only unit tests:
+```
+./run.sh -br unit_test
+```
 
 We use two long-lived branches for this project, "develop" and "master".
 
@@ -52,8 +76,26 @@ While making changes to <your_personal_branch>, you can create arbitrary short-l
 
 
 
-Warning notice:
+NOTE:
+Do NOT use Rebase on commits that you have already pushed to a remote repository! Instead, use Rebase only for cleaning up your local commit history before merging it into a shared team branch.
 
-Do NOT use Rebase on commits that you have already pushed to a remote repository!
 
-Instead, use Rebase only for cleaning up your local commit history before merging it into a shared team branch.
+
+## Lead developer
+
+Upload developed software package to [the test PyPI platform](https://test.pypi.org/manage/projects/):
+```
+./run.sh -br pypi_test
+```
+
+Upload developed software package to [the real PyPI platform](https://pypi.org/manage/projects/):
+```
+./run.sh -br pypi_real
+```
+
+Upload package images to Dockerhub. Login to Dockerhub with your credentials. Build Dockerhub images with and without jupyter notebook. Tag the built images. Push built and tagged images to Dockerhub repository:
+```
+./run.sh -br docker_hub
+./run.sh -br docker_hub_notebook
+```
+
