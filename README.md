@@ -1,6 +1,6 @@
 # General AI designed for tackling climate change!
 
-The goal of this package is to implementation general Artificial Intelligence (AI) techniques focused on solving climate change.
+The goal of this package is to implementation general Artificial Intelligence (AI) techniques with a focus on tackling climate change.
 
 
 
