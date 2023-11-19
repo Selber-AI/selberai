@@ -16,8 +16,8 @@ We use two long-lived branches for this project, "develop" and "master".
 ```
 
 In order to get started with contributing code, follow these steps:
-  1. `git clone https://github.com/SelberAI/selberai`
-  or `git clone https://<your_personal_access_token>@github.com/SelberAI/selberai`
+  1. `git clone https://github.com/Selber-AI/selberai`
+  or `git clone https://<your_personal_access_token>@github.com/Selber-AI/selberai`
   2. `git checkout develop`
   3. `git branch <your_personal_branch>`
   4. `git checkout <your_personal_branch>`
