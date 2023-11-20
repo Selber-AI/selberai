@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 
-COPY requirements.txt requirements.txt
+COPY requirements requirements
 
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get install -y build-essential python3 python3-pip python3-dev
