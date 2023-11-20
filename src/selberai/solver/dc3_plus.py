@@ -13,11 +13,11 @@ def solve(opt_prob:dict[callable, list[callable], list[callable]]) -> dict:
   x0 = [1, 2, 3, 4]
   
   constraints = []
-  for func in opt_prob.eq_func_list:
+  for func in opt_prob['q_func_list']:
     constraints.append(
       {'type': 'eq', 'fun': func}
     )
-  for func in opt_prob.ineq_func_list:
+  for func in opt_prob['ineq_func_list']:
     constraints.append(
       {'type': 'ineq', 'fun': func}
     )
