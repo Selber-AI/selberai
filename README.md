@@ -5,9 +5,9 @@ The goal of this package is to implementation general Artificial Intelligence (A
 
 ## Getting started
 
-* [data](https://github.com/Selber-AI/selberai/tree/master/selberai/data)
+* [data](https://github.com/Selber-AI/selberai/tree/master/src/selberai/data)
 
-* [solver](https://github.com/Selber-AI/selberai/tree/master/selberai/solver)
+* [solver](https://github.com/Selber-AI/selberai/tree/master/src/selberai/solver)
 
 ## Collaborators
 
