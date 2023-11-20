@@ -9,9 +9,13 @@ def solve(opt_prob:dict[callable, list[callable], list[callable]]) -> dict:
   """
   
   
-  objective = opt_prob['obj_func']
-  x0 = [1, 2, 3, 4]
+  ###
+  # SOLVE problem here.
+  ### 
   
+  ### Note: scipy processes problems NOT in standard format. It has reversed
+  # signs for the inequality constrains compared to standard format.
+  objective = opt_prob['obj_func']
   constraints = []
   for func in opt_prob['eq_func_list']:
     constraints.append(
@@ -21,6 +25,8 @@ def solve(opt_prob:dict[callable, list[callable], list[callable]]) -> dict:
     constraints.append(
       {'type': 'ineq', 'fun': func}
     )
+  
+  x0 = [1, 2, 3, 4]
   
   sol = scipy.optimize.minimize(objective, x0, constraints=constraints)
   solution = {
