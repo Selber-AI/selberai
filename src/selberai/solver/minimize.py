@@ -1,3 +1,5 @@
+import sys
+print(sys.path)
 import dc3_plus
 import numpy as np
 
