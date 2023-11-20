@@ -25,7 +25,7 @@ def solve(opt_prob:dict[callable, list[callable], list[callable]]) -> dict:
   sol = scipy.optimize.minimize(objective, x0, constraints=constraints)
   solution = {
     'value': sol.fun,
-    'var': sol.x
+    'variables': sol.x
   }
   
   
