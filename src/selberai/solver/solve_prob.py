@@ -2,8 +2,6 @@ import dc3_plus
 import numpy as np
 
 
-    
-
 def minimize(obj_func:callable, eq_func_list:list[callable]=None, 
   ineq_func_list:list[callable]=None, method='dc3_plus') -> dict:
   
@@ -29,10 +27,8 @@ def minimize(obj_func:callable, eq_func_list:list[callable]=None,
     'ineq_func_list' : ineq_func_list
   }
   
-  
   if method == 'dc3_plus':
     solution = dc3_plus.solve(opt_prob)
-  
   
   
   return solution
