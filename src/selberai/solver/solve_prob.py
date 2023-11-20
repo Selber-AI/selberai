@@ -2,8 +2,7 @@ import dc3_plus
 import numpy as np
 
 
-
-def minimize(obj_func:callable, eq_func_list:list[callable]=None, 
+def minimize(obj_func[callable], eq_func_list:list[callable]=None, 
   ineq_func_list:list[callable]=None, method='dc3_plus') -> dict:
   
   """
