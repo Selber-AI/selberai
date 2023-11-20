@@ -3,13 +3,13 @@ import random
 
 
 
-def solve(opt_prob: dict[callable, list[callable], list[callable]]) -> dict:
+def solve(opt_prob:dict[callable, list[callable], list[callable]]) -> dict:
   """
   Solves an optimization problem.
   """
   
   
-  objective = opt_prob['obj_fun']
+  objective = opt_prob['obj_func']
   x0 = [1, 2, 3, 4]
   
   constraints = []
